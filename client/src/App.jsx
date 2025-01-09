@@ -1,6 +1,8 @@
-import React from 'react'; 
+// App.jsx
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';  // Assuming you use react-toastify for ToastContainer
+import { ToastContainer } from 'react-toastify'; // Assuming you use react-toastify for ToastContainer
+import Sidebar from './components/Sidebar'; // Import Sidebar
 import MainDashboard from './pages/Dashboard/MainDashboard';
 import PrivateRoute from './components/PrivateRoute';
 import Home from './pages/Home';  // Replace with your actual Home component
@@ -13,15 +15,21 @@ const App = () => {
     <div>
       <ToastContainer />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/email-verify" element={<EmailVerify />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        
+        {/* Private Route with Sidebar */}
         <Route
           path="/dashboard"
           element={
             <PrivateRoute>
-              <MainDashboard />
+              <div className="flex">
+                <Sidebar /> {/* Sidebar should be included here */}
+                <MainDashboard />
+              </div>
             </PrivateRoute>
           }
         />
@@ -30,5 +38,5 @@ const App = () => {
   );
 };
 
-export default App;  // Export the App component as default
+export default App;
 
