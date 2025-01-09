@@ -1,13 +1,13 @@
 import React, { useContext, useState } from 'react'
 import { assets } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
-import { AppContent } from '../context/AppContext'
+import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import { toast } from "react-toastify";
 
 const ResetPassword = () => {
 
-  const {backendUrl} = useContext(AppContent)
+  const {backendUrl} = useContext(AppContext)
   axios.defaults.withCredentials = true
 
   const navigate = useNavigate()
@@ -41,28 +41,48 @@ const ResetPassword = () => {
     })
   }
 
-  const onSubmitEmail = async (e)=>{
+//   const onSubmitEmail = async (e)=>{
+//     e.preventDefault();
+//     try {
+//       const {data} = await axios.post(backendUrl + 'api/auth/send-reset-otp', {email})
+//       data.success ? toast.success(data.message) : toast.error(data.message)
+//       data.success && setIsEmailSent(true)
+//     } catch (error) {
+//       toast.error(error.message)
+//     }
+//   }
+// v
+//
+
+  const onSubmitEmail = async (e) => {
     e.preventDefault();
+    console.log("Submit email triggered");
+    console.log(backendUrl);
     try {
-      const {data} = await axios.post(backendUrl + '/api/auth/send-reset-otp', {email})
-      data.success ? toast.success(data.message) : toast.error(data.message)
-      data.success && setIsEmailSent(true)
+      const { data } = await axios.post(backendUrl + 'api/auth/send-reset-otp', { email });
+      console.log(data); // Check the response from the backend
+      data.success ? toast.success(data.message) : toast.error(data.message);
+      data.success && setIsEmailSent(true);
+      console.log("EMAIL IS SENT")
     } catch (error) {
-      toast.error(error.message)
+      console.log("EMAIL IS NOT SENT")
+      toast.error("Error sending OTP: " + error.message);
+      console.error("Error:", error);
     }
-  }
+  };
 
   const onSubmitOTP = async (e)=>{
     e.preventDefault()
     const otpArray = inputRefs.current.map(e => e.value)
     setOtp(otpArray.join(''))
     setIsOtpSubmitted(true)
+    console.log(otpArray.join('')); // Log the OTP value
   }
 
   const onSubmitNewPassword = async (e)=> {
     e.preventDefault();
     try {
-      const {data} = await axios.post(backendUrl + '/api/auth/reset-password', 
+      const {data} = await axios.post(backendUrl + 'api/auth/reset-password', 
       {email, otp, newPassword})
       data.success ? toast.success(data.message) : toast.error(data.message)
       data.success && navigate('/login')
