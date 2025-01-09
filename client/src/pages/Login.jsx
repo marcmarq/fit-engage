@@ -1,57 +1,62 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
-import axios from 'axios'
+import axios from 'axios';
 import { toast } from "react-toastify";
 
 const Login = () => {
-
   const navigate = useNavigate();
 
-  const {backendUrl, setIsLoggedin, getUserData} = useContext(AppContext)
-  console.log("AppContext in Login.jsx:", { backendUrl, setIsLoggedin, getUserData });
+  const { backendUrl, setIsLoggedin, getUserData, isLoggedin } = useContext(AppContext);
+  console.log("AppContext in Login.jsx:", { backendUrl, setIsLoggedin, getUserData, isLoggedin });
+
   const [state, setState] = useState("Sign Up");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const onSubmitHandler = async (e) =>{
-    try{
+  // If the user is already logged in, redirect to Dashboard
+  useEffect(() => {
+    if (isLoggedin) {
+      navigate("/Dashboard");
+    }
+  }, [isLoggedin, navigate]);
+
+  const onSubmitHandler = async (e) => {
+    try {
       e.preventDefault();
 
-      axios.defaults.withCredentials = true
-      
-      if(state === 'Sign Up'){
-        const {data} = await axios.post(backendUrl + 'api/auth/register', {name, email, password})
+      axios.defaults.withCredentials = true;
 
-        if(data.success){
-          setIsLoggedin(true)
-          getUserData()
-          navigate('/Dashboard')
-        }else{
-          toast.error(data.message)
+      if (state === 'Sign Up') {
+        const { data } = await axios.post(backendUrl + 'api/auth/register', { name, email, password });
+
+        if (data.success) {
+          setIsLoggedin(true);
+          getUserData();
+          navigate('/Dashboard');
+        } else {
+          toast.error(data.message);
         }
-      }else{
+      } else {
         const fullUrl = backendUrl + 'api/auth/login';
         console.log("Full URL:", fullUrl);  // Log to check the URL
 
         const { data } = await axios.post(fullUrl, { email, password });
 
-        // const {data} = await axios.post(backendUrl + 'api/auth/login', {email, password})
-
-        if(data.success){
-          setIsLoggedin(true)
-          getUserData()
-          navigate('/Dashboard')
-        }else{
-          toast.error(data.message)
+        if (data.success) {
+          setIsLoggedin(true);
+          getUserData();
+          navigate('/Dashboard');
+        } else {
+          toast.error(data.message);
         }
       }
-    }catch(error){
-      toast.error(error.message)
+    } catch (error) {
+      toast.error(error.message);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-white to-red-400">
@@ -72,7 +77,7 @@ const Login = () => {
         </p>
 
         <form onSubmit={onSubmitHandler}>
-          {state == "Sign Up" && (
+          {state === "Sign Up" && (
             <div className="mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#fd5c63]">
               <img src={assets.person_icon} alt="" />
               <input
@@ -146,3 +151,4 @@ const Login = () => {
 };
 
 export default Login;
+
