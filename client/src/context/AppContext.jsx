@@ -28,21 +28,20 @@ export const AppContextProvider = ({ children }) => {
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
-        const storedLoginStatus = localStorage.getItem("isLoggedin");
-
-        // Check if storedLoginStatus is 'true' or 'false'
-        if (storedLoginStatus === "true") {
+        const response = await fetch(`${backendUrl}api/auth/check-session`, {
+          method: "GET",
+          credentials: "include", // Ensure cookies are included
+        });
+        const data = await response.json();
+        if (data.isLoggedIn) {
           setIsLoggedin(true); // User is logged in
           await getUserData(); // Fetch user data
-        } else if (storedLoginStatus === "false") {
-          setIsLoggedin(false); // User is logged out
         } else {
-          // If no valid value is found, we assume not logged in (you should not store `null` in localStorage)
-          setIsLoggedin(false);
+          setIsLoggedin(false); // User is logged out
         }
       } catch (error) {
         console.error("Error checking login status:", error);
-        setIsLoggedin(false); // Ensure fallback to logged-out state
+        setIsLoggedin(false); // Fallback to logged-out state
       }
     };
 
@@ -50,18 +49,40 @@ export const AppContextProvider = ({ children }) => {
   }, []); // Run only once on app load
 
   // Login method
-  const login = () => {
-    setIsLoggedin(true); // Update login state
-    localStorage.setItem("isLoggedin", true); // Persist true in localStorage
-    getUserData(); // Fetch user data immediately after login
+  const login = async () => {
+    try {
+      const response = await fetch(`${backendUrl}api/login`, {
+        method: "POST",
+        credentials: "include", // Ensure cookies are included
+        body: JSON.stringify({ username, password }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        setIsLoggedin(true); // Update login state
+        await getUserData(); // Fetch user data immediately after login
+      } else {
+        throw new Error("Login failed");
+      }
+    } catch (error) {
+      console.error("Error logging in:", error);
+    }
   };
 
   // Logout method
-  const logout = () => {
-    setIsLoggedin(false); // Update login state
-    setUserData(null); // Clear user data
-    localStorage.setItem("isLoggedin", false); // Persist false in localStorage
-    window.location.href = "/login"; // Redirect to login page
+  const logout = async () => {
+    try {
+      await fetch(`${backendUrl}api/logout`, {
+        method: "POST",
+        credentials: "include", // Ensure cookies are included
+      });
+
+      setIsLoggedin(false); // Update login state
+      setUserData(null); // Clear user data
+      window.location.href = "/login"; // Redirect to login page
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
   };
 
   return (
@@ -80,4 +101,3 @@ export const AppContextProvider = ({ children }) => {
     </AppContext.Provider>
   );
 };
-

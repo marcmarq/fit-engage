@@ -4,7 +4,7 @@ import { AppContext } from '../context/AppContext';
 
 const PrivateRoute = ({ children }) => {
   const { isLoggedin } = useContext(AppContext);
-console.log("PrivateRoute - isLoggedin:", isLoggedin);
+
   if (isLoggedin === null) {
     return <div>Loading...</div>; // Render a spinner or loader while state is being resolved
   }
