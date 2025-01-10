@@ -1,8 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { FaHome, FaUser, FaSignOutAlt } from 'react-icons/fa'; // Icons for the sidebar
+import { Link, useNavigate } from 'react-router-dom';
+import { FaHome, FaUser, FaSignOutAlt, FaClipboardList, FaDollarSign, FaUsers } from 'react-icons/fa'; // Icons for the sidebar
+import { useContext } from 'react';
+import { AppContext } from '../context/AppContext';  // Assuming AppContext is where `setIsLoggedin` is defined
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+  const { setIsLoggedin } = useContext(AppContext);
+
+  // Function to handle logout
+  const handleLogout = () => {
+    setIsLoggedin(false);  // Set logged-in state to false
+    navigate('/login');    // Redirect to login page
+  };
+
   return (
     <div className="bg-maroon text-white w-64 min-h-screen p-5">
       {/* Admin Profile Section */}
@@ -25,18 +36,34 @@ const Sidebar = () => {
           </Link>
         </li>
         <li>
-          <Link to="/members" className="block py-2 px-4 hover:bg-gray-700 rounded">
-            View Members
+          <Link to="/registration" className="block py-2 px-4 hover:bg-gray-700 rounded">
+            <FaClipboardList className="inline-block mr-2" /> Registration
           </Link>
         </li>
         <li>
-          <Link to="/login" className="block py-2 px-4 hover:bg-gray-700 rounded">
-            <FaSignOutAlt className="inline-block mr-2" /> Logout
+          <Link to="/payments" className="block py-2 px-4 hover:bg-gray-700 rounded">
+            <FaDollarSign className="inline-block mr-2" /> Payments
+          </Link>
+        </li>
+        <li>
+          <Link to="/members" className="block py-2 px-4 hover:bg-gray-700 rounded">
+            <FaUsers className="inline-block mr-2" /> View Members
           </Link>
         </li>
       </ul>
+
+      {/* Logout Button */}
+      <div className="mt-10">
+        <button
+          onClick={handleLogout}
+          className="w-full py-2 px-4 bg-red-500 hover:bg-red-700 rounded text-white font-semibold"
+        >
+          <FaSignOutAlt className="inline-block mr-2" /> Logout
+        </button>
+      </div>
     </div>
   );
 };
 
 export default Sidebar;
+

@@ -1,14 +1,21 @@
-// App.jsx
-import React from 'react';
+// src/App.jsx
+// import React from 'react';
+import React from "react";
+//import { AppContext } from "./context/AppContext";
 import { Routes, Route } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify'; // Assuming you use react-toastify for ToastContainer
-import Sidebar from './components/Sidebar'; // Import Sidebar
-import MainDashboard from './pages/Dashboard/MainDashboard';
-import PrivateRoute from './components/PrivateRoute';
-import Home from './pages/Home';  // Replace with your actual Home component
-import Login from './pages/Login';  // Replace with your actual Login component
-import EmailVerify from './pages/EmailVerify';  // Replace with your actual EmailVerify component
-import ResetPassword from './pages/ResetPassword';  // Replace with your actual ResetPassword component
+import { ToastContainer } from 'react-toastify';
+import Sidebar from './components/Sidebar'; // Sidebar component
+import MainDashboard from './pages/Dashboard/MainDashboard'; // Dashboard page
+import AdminProfile from './pages/AdminProfile'; // AdminProfile page
+import Registration from './pages/Registration'; // Registration page
+import Payments from './pages/Payments'; // Payments page
+import ViewMembers from './pages/ViewMembers'; // ViewMembers page
+import PrivateRoute from './components/PrivateRoute'; // PrivateRoute component
+import PublicRoute from './components/PublicRoute'; // PublicRoute component
+import Home from './pages/Home'; // Home page
+import Login from './pages/Login'; // Login page
+import EmailVerify from './pages/EmailVerify'; // Email verification page
+import ResetPassword from './pages/ResetPassword'; // Reset password page
 
 const App = () => {
   return (
@@ -16,19 +23,91 @@ const App = () => {
       <ToastContainer />
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/email-verify" element={<EmailVerify />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <Home />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/email-verify"
+          element={
+            <PublicRoute>
+              <EmailVerify />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <PublicRoute>
+              <ResetPassword />
+            </PublicRoute>
+          }
+        />
         
-        {/* Private Route with Sidebar */}
+        {/* Private Routes */}
         <Route
           path="/dashboard"
           element={
             <PrivateRoute>
               <div className="flex">
-                <Sidebar /> {/* Sidebar should be included here */}
+                <Sidebar />
                 <MainDashboard />
+              </div>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <div className="flex">
+                <Sidebar />
+                <AdminProfile />
+              </div>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/registration"
+          element={
+            <PrivateRoute>
+              <div className="flex">
+                <Sidebar />
+                <Registration />
+              </div>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/payments"
+          element={
+            <PrivateRoute>
+              <div className="flex">
+                <Sidebar />
+                <Payments />
+              </div>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/members"
+          element={
+            <PrivateRoute>
+              <div className="flex">
+                <Sidebar />
+                <ViewMembers />
               </div>
             </PrivateRoute>
           }

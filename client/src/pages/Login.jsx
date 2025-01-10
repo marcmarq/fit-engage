@@ -16,14 +16,14 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // If the user is already logged in, redirect to Dashboard
-  useEffect(() => {
-    if (isLoggedin) {
-      navigate("/Dashboard");
-    }
-  }, [isLoggedin, navigate]);
+  // If the user is already logged in, redirect to dashboard
+  // useEffect(() => {
+  //   if (isLoggedin) {
+  //     navigate("/dashboard");
+  //   }
+  // }, [isLoggedin, navigate]);
 
-  const onSubmitHandler = async (e) => {
+   const onSubmitHandler = async (e) => {
     try {
       e.preventDefault();
 
@@ -35,7 +35,7 @@ const Login = () => {
         if (data.success) {
           setIsLoggedin(true);
           getUserData();
-          navigate('/Dashboard');
+          navigate('/dashboard');
         } else {
           toast.error(data.message);
         }
@@ -48,7 +48,7 @@ const Login = () => {
         if (data.success) {
           setIsLoggedin(true);
           getUserData();
-          navigate('/Dashboard');
+          navigate('/dashboard');
         } else {
           toast.error(data.message);
         }
