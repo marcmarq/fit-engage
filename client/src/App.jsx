@@ -4,9 +4,10 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import EmailVerify from './pages/EmailVerify'
 import ResetPassword from './pages/ResetPassword'
+import MainDashboard from './pages/Dashboard/MainDashboard'
 import {ToastContainer} from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import MainDashboard from './pages/Dashboard/MainDashboard'
+
 
 const App = () => {
   return (
