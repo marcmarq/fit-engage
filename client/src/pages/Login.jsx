@@ -1,52 +1,63 @@
 import React, { useContext, useState } from "react";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
-import { AppContent } from "../context/AppContext";
-import axios from 'axios'
+import { AppContext } from "../context/AppContext";
+import axios from "axios";
 import { toast } from "react-toastify";
 
 const Login = () => {
-
   const navigate = useNavigate();
 
-  const {backendUrl, setIsLoggedin, getUserData} = useContext(AppContent)
+  const { backendUrl, setIsLoggedin, getUserData, isLoggedin, login } = useContext(AppContext);
+  console.log("AppContext in Login.jsx:", { backendUrl, setIsLoggedin, getUserData, isLoggedin });
 
   const [state, setState] = useState("Sign Up");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const onSubmitHandler = async (e) =>{
-    try{
-      e.preventDefault();
-
-      axios.defaults.withCredentials = true
-      
-      if(state === 'Sign Up'){
-        const {data} = await axios.post(backendUrl + '/api/auth/register', {name, email, password})
-
-        if(data.success){
-          setIsLoggedin(true)
-          getUserData()
-          navigate('/Dashboard')
-        }else{
-          toast.error(data.message)
-        }
-      }else{
-        const {data} = await axios.post(backendUrl + '/api/auth/login', {email, password})  
-
-        if(data.success){
-          setIsLoggedin(true)
-          getUserData()
-          navigate('/Dashboard')
-        }else{
-          toast.error(data.message)
-        }
-      }
-    }catch(error){
-      toast.error(error.message)
+  // If the user is already logged in, redirect to dashboard
+  React.useEffect(() => {
+    if (isLoggedin) {
+      navigate("/dashboard");
     }
-  }
+  }, [isLoggedin, navigate]);
+
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
+
+    if (state === "Sign Up") {
+      try {
+        const { data } = await axios.post(`${backendUrl}/api/auth/register`, { name, email, password });
+
+        if (data.success) {
+          setIsLoggedin(true);
+          await getUserData(); // Get user data after successful registration
+          navigate("/dashboard");
+        } else {
+          toast.error(data.message);
+        }
+      } catch (error) {
+        toast.error(error.message);
+      }
+    } else {
+      try {
+        // const { data } = await axios.post(`${backendUrl}/api/auth/login`, { email, password });
+        const { data } = await axios.post(`${backendUrl}/api/auth/login`, { email, password }, {
+          withCredentials: true, // Ensures cookies are sent with the request
+        });
+        if (data.success) {
+          setIsLoggedin(true);
+          await getUserData(); // Get user data after successful login
+          navigate("/dashboard");
+        } else {
+          toast.error(data.message);
+        }
+      } catch (error) {
+        toast.error(error.message);
+      }
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-white to-red-400">
@@ -61,13 +72,11 @@ const Login = () => {
           {state === "Sign Up" ? "Create Account" : "Login"}
         </h2>
         <p className="text-center text-sm mb-6">
-          {state === "Sign Up"
-            ? "Create your Account"
-            : "Login to your account!"}
+          {state === "Sign Up" ? "Create your Account" : "Login to your account!"}
         </p>
 
         <form onSubmit={onSubmitHandler}>
-          {state == "Sign Up" && (
+          {state === "Sign Up" && (
             <div className="mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#fd5c63]">
               <img src={assets.person_icon} alt="" />
               <input
@@ -141,3 +150,4 @@ const Login = () => {
 };
 
 export default Login;
+

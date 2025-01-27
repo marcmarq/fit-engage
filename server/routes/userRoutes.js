@@ -4,6 +4,7 @@ import { getUserData } from "../controllers/userController.js";
 
 const userRouter = express.Router();
 
+// Protected Routes
 userRouter.get("/data", userAuth, getUserData);
 
 export default userRouter;

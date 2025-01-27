@@ -2,6 +2,13 @@
 client/node_modules/
 server/node_modules/
 
+# Cookies
+cookies.txt
+
+# Dev files
+*.bak
+*.org
+
 # Logs
 logs
 *.log
