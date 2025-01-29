@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AppContext } from "../context/AppContext";
 
-const ViewMembers = () => {
+const Members = () => {
   const { backendUrl } = useContext(AppContext);
   const [membershipData, setMembershipData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -495,4 +495,4 @@ const handleSubmit = async (e) => {
   );
 };
 
-export default ViewMembers;
+export default Members;
