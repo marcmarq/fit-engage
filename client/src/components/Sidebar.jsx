@@ -35,12 +35,7 @@ const Sidebar = () => {
             <FaUser className="inline-block mr-2" /> Admin Profile
           </Link>
         </li>
-        <li>
-          <Link to="/registration" className="block py-2 px-4 hover:bg-gray-700 rounded">
-            <FaClipboardList className="inline-block mr-2" /> Registration
-          </Link>
-        </li>
-        <li>
+       <li>
           <Link to="/payments" className="block py-2 px-4 hover:bg-gray-700 rounded">
             <FaDollarSign className="inline-block mr-2" /> Payments
           </Link>

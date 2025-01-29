@@ -7,7 +7,6 @@ import { ToastContainer } from 'react-toastify';
 import Sidebar from './components/Sidebar'; // Sidebar component
 import Dashboard from './pages/Dashboard'; // Dashboard page
 import AdminProfile from './pages/AdminProfile'; // AdminProfile page
-import Registration from './pages/Registration'; // Registration page
 import Payments from './pages/Payments'; // Payments page
 import ViewMembers from './pages/ViewMembers'; // ViewMembers page
 import PrivateRoute from './components/PrivateRoute'; // PrivateRoute component
@@ -78,18 +77,7 @@ const App = () => {
               </div>
             </PrivateRoute>
           }
-        />
-        <Route
-          path="/registration"
-          element={
-            <PrivateRoute>
-              <div className="flex">
-                <Sidebar />
-                <Registration />
-              </div>
-            </PrivateRoute>
-          }
-        />
+        /> 
         <Route
           path="/payments"
           element={
