@@ -7,12 +7,8 @@ import { toast } from "react-toastify";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { backendUrl, setIsLoggedin, getUserData, isLoggedin } = useContext(AppContext);
 
-  const { backendUrl, setIsLoggedin, getUserData, isLoggedin, login } = useContext(AppContext);
-  console.log("AppContext in Login.jsx:", { backendUrl, setIsLoggedin, getUserData, isLoggedin });
-
-  const [state, setState] = useState("Sign Up");
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -25,37 +21,22 @@ const Login = () => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/api/auth/login`,
+        { email, password },
+        { withCredentials: true } // Ensures cookies are sent with the request
+      );
 
-    if (state === "Sign Up") {
-      try {
-        const { data } = await axios.post(`${backendUrl}/api/auth/register`, { name, email, password });
-
-        if (data.success) {
-          setIsLoggedin(true);
-          await getUserData(); // Get user data after successful registration
-          navigate("/dashboard");
-        } else {
-          toast.error(data.message);
-        }
-      } catch (error) {
-        toast.error(error.message);
+      if (data.success) {
+        setIsLoggedin(true);
+        await getUserData(); // Get user data after successful login
+        navigate("/dashboard");
+      } else {
+        toast.error(data.message);
       }
-    } else {
-      try {
-        // const { data } = await axios.post(`${backendUrl}/api/auth/login`, { email, password });
-        const { data } = await axios.post(`${backendUrl}/api/auth/login`, { email, password }, {
-          withCredentials: true, // Ensures cookies are sent with the request
-        });
-        if (data.success) {
-          setIsLoggedin(true);
-          await getUserData(); // Get user data after successful login
-          navigate("/dashboard");
-        } else {
-          toast.error(data.message);
-        }
-      } catch (error) {
-        toast.error(error.message);
-      }
+    } catch (error) {
+      toast.error(error.message);
     }
   };
 
@@ -68,27 +49,10 @@ const Login = () => {
         className="absolute left-5 sm:left-20 top-5 w-28 sm:w-32 cursor-pointer"
       />
       <div className="bg-[#D2122E] p-10 rounded-lg shadow-lg w-full sm:w-96 text-white text-sm">
-        <h2 className="text-3xl font-semibold text-white text-center mb-3">
-          {state === "Sign Up" ? "Create Account" : "Login"}
-        </h2>
-        <p className="text-center text-sm mb-6">
-          {state === "Sign Up" ? "Create your Account" : "Login to your account!"}
-        </p>
+        <h2 className="text-3xl font-semibold text-white text-center mb-3">Login</h2>
+        <p className="text-center text-sm mb-6">Login to your account!</p>
 
         <form onSubmit={onSubmitHandler}>
-          {state === "Sign Up" && (
-            <div className="mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#fd5c63]">
-              <img src={assets.person_icon} alt="" />
-              <input
-                onChange={(e) => setName(e.target.value)}
-                value={name}
-                className="bg-transparent outline-none"
-                type="text"
-                placeholder="Full Name"
-                required
-              />
-            </div>
-          )}
           <div className="mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#fd5c63]">
             <img src={assets.mail_icon} alt="" />
             <input
@@ -119,31 +83,9 @@ const Login = () => {
             Forgot password?
           </p>
           <button className="w-full py-2.5 rounded-full bg-gradient-to-r from-red-300 to bg-red-600 text-white font-medium">
-            {state}
+            Login
           </button>
         </form>
-
-        {state === "Sign Up" ? (
-          <p className="text-[#FBCEB1] text-center text-xs mt-4">
-            Already have an account?{" "}
-            <span
-              onClick={() => setState("Login")}
-              className="text-blue-400 cursor-pointer underline"
-            >
-              Login here
-            </span>
-          </p>
-        ) : (
-          <p className="text-[#FBCEB1] text-center text-xs mt-4">
-            Don't have an account?{" "}
-            <span
-              onClick={() => setState("Sign Up")}
-              className="text-blue-400 cursor-pointer underline"
-            >
-              Sign up
-            </span>
-          </p>
-        )}
       </div>
     </div>
   );
