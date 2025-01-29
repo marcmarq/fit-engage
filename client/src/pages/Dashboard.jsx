@@ -22,14 +22,14 @@ const Dashboard = () => {
 
           // Normalize property names
           const normalizedData = data.map((member) => ({
-            firstName: member["First Name"] || "N/A",
-            lastName: member["Last Name"] || "N/A",
-            membershipExpiryDate: member["Membership Expiry Date"] || "",
-            membershipRenewal: member["Membership Renewal"] || "",
-            annualMembership: member["Annual Membership"] || "No",
-            notes1: member["Notes 1"] || "None",
-            notes2: member["Notes 2"] || "None",
-            notes3: member["Notes 3"] || "None",
+            firstName: member["firstName"] || "N/A",
+            lastName: member["lastName"] || "N/A",
+            membershipExpiryDate: member["membershipExpiryDate"] || "",
+            membershipRenewal: member["membershipRenewal"] || "",
+            annualMembership: member["annualMembership"] || "No",
+            notes1: member["notes1"] || "None",
+            notes2: member["notes2"] || "None",
+            notes3: member["notes3"] || "None",
           }));
 
           setMembershipData(normalizedData); // Set the membership data to state
