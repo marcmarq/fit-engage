@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaHome, FaUser, FaSignOutAlt, FaClipboardList, FaDollarSign, FaUsers } from 'react-icons/fa'; // Icons for the sidebar
-import { useContext } from 'react';
-import { AppContext } from '../context/AppContext';  // Assuming AppContext is where `setIsLoggedin` is defined
+import { FaHome, FaUser, FaSignOutAlt, FaDollarSign, FaUsers } from 'react-icons/fa';
+import { AppContext } from '../context/AppContext';  // Import the AppContext
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const { setIsLoggedin } = useContext(AppContext);
+  const { setIsLoggedin, setUserData, userData, getUserData } = useContext(AppContext);  // Access context data and methods
 
   // Function to handle logout
   const handleLogout = () => {
@@ -14,13 +13,22 @@ const Sidebar = () => {
     navigate('/login');    // Redirect to login page
   };
 
+  // Log the user data to check if it's accessible
+  useEffect(() => {
+    console.log('Sidebar userData:', userData); // Log the userData on sidebar render
+
+    if (!userData) {  // Only fetch user data if it's not already available
+      getUserData(); // Fetch user data when the component mounts
+    }
+  }, [getUserData, userData]); // Dependency array ensures it runs only when needed
+
   return (
     <div className="bg-maroon text-white w-64 min-h-screen p-5">
       {/* Admin Profile Section */}
       <div className="text-center mb-10">
         <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3" />
-        <p className="font-semibold">Admin Name</p>
-        <p className="text-sm">admin@example.com</p>
+        <p className="font-semibold">{userData ? userData.name : 'Admin Name'}</p> {/* Admin Name */}
+        <p className="text-sm">{userData ? userData.email : 'admin@example.com'}</p> {/* Admin Email */}
       </div>
 
       {/* Navigation Menu */}
@@ -36,18 +44,13 @@ const Sidebar = () => {
           </Link>
         </li>
         <li>
-          <Link to="/registration" className="block py-2 px-4 hover:bg-gray-700 rounded">
-            <FaClipboardList className="inline-block mr-2" /> Registration
-          </Link>
-        </li>
-        <li>
           <Link to="/payments" className="block py-2 px-4 hover:bg-gray-700 rounded">
             <FaDollarSign className="inline-block mr-2" /> Payments
           </Link>
         </li>
         <li>
           <Link to="/members" className="block py-2 px-4 hover:bg-gray-700 rounded">
-            <FaUsers className="inline-block mr-2" /> View Members
+            <FaUsers className="inline-block mr-2" /> Members
           </Link>
         </li>
       </ul>

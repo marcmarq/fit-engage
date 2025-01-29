@@ -5,11 +5,10 @@ import React from "react";
 import { Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import Sidebar from './components/Sidebar'; // Sidebar component
-import MainDashboard from './pages/Dashboard/MainDashboard'; // Dashboard page
+import Dashboard from './pages/Dashboard'; // Dashboard page
 import AdminProfile from './pages/AdminProfile'; // AdminProfile page
-import Registration from './pages/Registration'; // Registration page
 import Payments from './pages/Payments'; // Payments page
-import ViewMembers from './pages/ViewMembers'; // ViewMembers page
+import Members from './pages/Members'; // Members page
 import PrivateRoute from './components/PrivateRoute'; // PrivateRoute component
 import PublicRoute from './components/PublicRoute'; // PublicRoute component
 import Home from './pages/Home'; // Home page
@@ -63,7 +62,7 @@ const App = () => {
             <PrivateRoute>
               <div className="flex">
                 <Sidebar />
-                <MainDashboard />
+                <Dashboard />
               </div>
             </PrivateRoute>
           }
@@ -78,18 +77,7 @@ const App = () => {
               </div>
             </PrivateRoute>
           }
-        />
-        <Route
-          path="/registration"
-          element={
-            <PrivateRoute>
-              <div className="flex">
-                <Sidebar />
-                <Registration />
-              </div>
-            </PrivateRoute>
-          }
-        />
+        /> 
         <Route
           path="/payments"
           element={
@@ -107,7 +95,7 @@ const App = () => {
             <PrivateRoute>
               <div className="flex">
                 <Sidebar />
-                <ViewMembers />
+                <Members />
               </div>
             </PrivateRoute>
           }

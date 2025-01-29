@@ -25,15 +25,8 @@ authRouter.post("/send-verify-otp", userAuth, sendVerifyOtp);
 authRouter.post("/verify-account", userAuth, verifyEmail);
 authRouter.get("/is-auth", userAuth, isAuthenticated);
 
-// New Route: Check Session
-authRouter.get("/check-session", userAuth, (req, res) => {
-  return res.json({ loggedIn: true });
-});
-
-// For the specific check authenticated route
-authRouter.get("/isAuthenticated", userAuth, (req, res) => {
-  return res.json({ success: true });
-});
+// Check Session
+authRouter.get("/check-session", userAuth, (req, res) => res.json({ loggedIn: true }));
 
 export default authRouter;
 
