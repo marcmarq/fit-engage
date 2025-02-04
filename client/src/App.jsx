@@ -9,8 +9,8 @@ import Dashboard from './pages/Dashboard'; // Dashboard page
 import AdminProfile from './pages/AdminProfile'; // AdminProfile page
 import Payments from './pages/Payments'; // Payments page
 import Members from './pages/Members'; // Members page
-import PrivateRoute from './components/PrivateRoute'; // PrivateRoute component
-import PublicRoute from './components/PublicRoute'; // PublicRoute component
+import PrivateRoute from './components/Routes/PrivateRoute'; // PrivateRoute component
+import PublicRoute from './components/Routes/PublicRoute'; // PublicRoute component
 import Home from './pages/Home'; // Home page
 import Login from './pages/Login'; // Login page
 import EmailVerify from './pages/EmailVerify'; // Email verification page
