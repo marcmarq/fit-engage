@@ -5,6 +5,22 @@ const useMembers = () => {
   const { backendUrl } = useContext(AppContext);
   const [membershipData, setMembershipData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(''); // State for search functionality
+  const [editingMemberId, setEditingMemberId] = useState(null); // Track which member is being edited
+
+  // State for form fields
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    membershipExpiryDate: '',
+    membershipRenewal: '',
+    annualMembership: '',
+    notes1: '',
+    notes2: '',
+    notes3: '',
+    length: '',
+  });
+
 
   useEffect(() => {
     const fetchMembershipData = async () => {
@@ -113,12 +129,18 @@ const useMembers = () => {
 
   return {
     membershipData,
+    setMembershipData,
+    formData,
+    setFormData,
     loading,
-    addMember,
-    updateMember,
-    deleteMember,
+    searchTerm,
+    setSearchTerm,
+    editingMemberId,
+    setEditingMemberId,
+    // addMember,
+    // updateMember,
+    // deleteMember,
   };
 };
 
 export default useMembers;
-

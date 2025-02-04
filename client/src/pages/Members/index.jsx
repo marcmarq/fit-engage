@@ -1,248 +1,112 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useContext, useState } from 'react';
 import { AppContext } from "../../context/AppContext";
+import MemberForm from "../../components/MemberForm";
+import MemberList from "../../components/MemberList";
+import useMembers from "../../hooks/useMembers";
+
 
 const Members = () => {
   const { backendUrl } = useContext(AppContext);
-  const [membershipData, setMembershipData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+      membershipData,
+      setMembershipData,
+      formData,
+      setFormData,
+      loading,
+      searchTerm,
+      setSearchTerm,
+      editingMemberId,
+      setEditingMemberId
+    } = useMembers();
 
-  // State for form fields
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    membershipExpiryDate: '',
-    membershipRenewal: '',
-    annualMembership: '',
-    notes1: '',
-    notes2: '',
-    notes3: '',
-    length: '',
-  });
+  // Handle submit opeartion
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const [searchTerm, setSearchTerm] = useState(''); // State for search functionality
-  const [editingMemberId, setEditingMemberId] = useState(null); // Track which member is being edited
+    const memberData = {
+      ...formData,
+      membershipExpiryDate: formData.membershipExpiryDate ? new Date(formData.membershipExpiryDate).toISOString() : null,
+      membershipRenewal: formData.membershipRenewal ? new Date(formData.membershipRenewal).toISOString() : null,
+    };
 
-  useEffect(() => {
-    const fetchMembershipData = async () => {
+    if (editingMemberId) {
+      // If editing, we need to send the full member object or any identifying details
       try {
-        const response = await fetch(`${backendUrl}/api/gym/membership/all`, {
-          method: "GET",
+        // Instead of using editingMemberId._id, use the full member object or its details (e.g., name)
+        const response = await fetch(`${backendUrl}/api/gym/membership/edit`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...memberData,
+            firstName: editingMemberId.firstName,
+            lastName: editingMemberId.lastName,
+          }), // Send identifying data along with the member data to find the member
           credentials: "include",
         });
 
         if (response.ok) {
-          const data = await response.json();
-
-          // Normalize property names
-          const normalizedData = data.map((member) => ({
-            firstName: member["firstName"] || "N/A",
-            lastName: member["lastName"] || "N/A",
-            membershipExpiryDate: member["membershipExpiryDate"] || "",
-            membershipRenewal: member["membershipRenewal"] || "",
-            annualMembership: member["annualMembership"] || "No",
-            notes1: member["notes1"] || "None",
-            notes2: member["notes2"] || "None",
-            notes3: member["notes3"] || "None",
-            length: member["length"] || "N/A"
-          }));
-
-          setMembershipData(normalizedData);
+          const updatedMember = await response.json(); // Get the updated member
+          setMembershipData(membershipData.map((member) =>
+            member.firstName === updatedMember.firstName && member.lastName === updatedMember.lastName
+              ? updatedMember
+              : member
+          ));
+          setEditingMemberId(null); // Reset editing mode
+          setFormData({ // Reset the form data
+            firstName: '',
+            lastName: '',
+            membershipExpiryDate: '',
+            membershipRenewal: '',
+            annualMembership: '',
+            notes1: '',
+            notes2: '',
+            notes3: '',
+            length: '',
+          });
         } else {
-          console.error("Failed to fetch membership info");
+          console.error("Failed to update member");
         }
       } catch (error) {
-        console.error("Error fetching membership info:", error);
-      } finally {
-        setLoading(false);
+        console.error("Error updating member:", error);
       }
-    };
+    } else {
+      // Add new member
+      try {
+        const response = await fetch(`${backendUrl}/api/gym/membership`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(memberData),
+          credentials: "include",
+        });
 
-    fetchMembershipData();
-  }, [backendUrl]);
-
-// const handleSubmit = async (e) => {
-//   e.preventDefault();
-//   if (editingMemberId) {
-//     // Update existing member
-//     try {
-//       const response = await fetch(`${backendUrl}/api/gym/membership/${editingMemberId}`, {
-//         method: "PUT",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify(formData),
-//         credentials: "include",
-//       });
-
-//       if (response.ok) {
-//         // Update the member data in state
-//         setMembershipData(membershipData.map((member) =>
-//           member.id === editingMemberId ? { ...member, ...formData } : member
-//         ));
-//         setEditingMemberId(null); // Reset editing mode
-//         setFormData({ // Reset the form data
-//           firstName: '',
-//           lastName: '',
-//           membershipExpiryDate: '',
-//           membershipRenewal: '',
-//           annualMembership: '',
-//           notes1: '',
-//           notes2: '',
-//           notes3: '',
-//           length: '',
-//         });
-//       } else {
-//         console.error("Failed to update member");
-//       }
-//     } catch (error) {
-//       console.error("Error updating member:", error);
-//     }
-//   } else {
-//     // Add new member
-//     try {
-//       const response = await fetch(`${backendUrl}/api/gym/membership`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify(formData),
-//         credentials: "include",
-//       });
-
-//       if (response.ok) {
-//         const newMember = await response.json();
-//         setMembershipData([...membershipData, newMember]); // Add the new member to state
-//         setFormData({ // Reset form data after adding new member
-//           firstName: '',
-//           lastName: '',
-//           membershipExpiryDate: '',
-//           membershipRenewal: '',
-//           annualMembership: '',
-//           notes1: '',
-//           notes2: '',
-//           notes3: '',
-//           length: '',
-//         });
-//       } else {
-//         console.error("Failed to add new member");
-//       }
-//     } catch (error) {
-//       console.error("Error adding new member:", error);
-//     }
-//   }
-// };
-
-
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  const memberData = {
-    ...formData,
-    membershipExpiryDate: formData.membershipExpiryDate ? new Date(formData.membershipExpiryDate).toISOString() : null,
-    membershipRenewal: formData.membershipRenewal ? new Date(formData.membershipRenewal).toISOString() : null,
+        if (response.ok) {
+          const newMember = await response.json(); // Get the new member
+          setMembershipData([...membershipData, newMember]); // Add the new member to state
+          setFormData({ // Reset form data after adding new member
+            firstName: '',
+            lastName: '',
+            membershipExpiryDate: '',
+            membershipRenewal: '',
+            annualMembership: '',
+            notes1: '',
+            notes2: '',
+            notes3: '',
+            length: '',
+          });
+        } else {
+          console.error("Failed to add new member");
+        }
+      } catch (error) {
+        console.error("Error adding new member:", error);
+      }
+    }
   };
 
-  if (editingMemberId) {
-    // If editing, we need to send the full member object or any identifying details
-    try {
-      // Instead of using editingMemberId._id, use the full member object or its details (e.g., name)
-      const response = await fetch(`${backendUrl}/api/gym/membership/edit`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...memberData,
-          firstName: editingMemberId.firstName,
-          lastName: editingMemberId.lastName,
-        }), // Send identifying data along with the member data to find the member
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const updatedMember = await response.json(); // Get the updated member
-        setMembershipData(membershipData.map((member) =>
-          member.firstName === updatedMember.firstName && member.lastName === updatedMember.lastName
-            ? updatedMember
-            : member
-        ));
-        setEditingMemberId(null); // Reset editing mode
-        setFormData({ // Reset the form data
-          firstName: '',
-          lastName: '',
-          membershipExpiryDate: '',
-          membershipRenewal: '',
-          annualMembership: '',
-          notes1: '',
-          notes2: '',
-          notes3: '',
-          length: '',
-        });
-      } else {
-        console.error("Failed to update member");
-      }
-    } catch (error) {
-      console.error("Error updating member:", error);
-    }
-  } else {
-    // Add new member
-    try {
-      const response = await fetch(`${backendUrl}/api/gym/membership`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(memberData),
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const newMember = await response.json(); // Get the new member
-        setMembershipData([...membershipData, newMember]); // Add the new member to state
-        setFormData({ // Reset form data after adding new member
-          firstName: '',
-          lastName: '',
-          membershipExpiryDate: '',
-          membershipRenewal: '',
-          annualMembership: '',
-          notes1: '',
-          notes2: '',
-          notes3: '',
-          length: '',
-        });
-      } else {
-        console.error("Failed to add new member");
-      }
-    } catch (error) {
-      console.error("Error adding new member:", error);
-    }
-  }
-};
-
-
-
-  // // Handle the delete operation
-  // const handleDelete = async (id) => {
-  //   try {
-  //     const response = await fetch(`${backendUrl}/api/gym/membership/${id}`, {
-  //       method: 'DELETE',
-  //       credentials: "include",
-  //     });
-
-  //     if (response.ok) {
-  //       // Remove the deleted member from the state
-  //       setMembershipData(membershipData.filter(member => member.id !== id));
-  //     } else {
-  //       console.error("Failed to delete member");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting member:", error);
-  //   }
-  // };
-
-
-  // Handle the delete operation
+  // Handle delete operation
   const handleDelete = async (member) => {
     try {
       const response = await fetch(`${backendUrl}/api/gym/membership`, {
@@ -271,7 +135,7 @@ const handleSubmit = async (e) => {
     }
   };
 
-
+  // Handle edit operation
   const handleEdit = (member) => {
     // Find the member from the current membership data based on full match
     const memberToEdit = membershipData.find(
@@ -297,7 +161,6 @@ const handleSubmit = async (e) => {
       });
     }
   };
-
 
   // Handle search functionality
   const handleSearch = (e) => {
@@ -368,10 +231,6 @@ const handleSubmit = async (e) => {
             required
           />
         </div>
-
-
-
-
         <div className="mb-4">
           <label className="block text-gray-700">Annual Membership</label>
           <input
