@@ -1,34 +1,20 @@
-import React, { useEffect, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaHome, FaUser, FaSignOutAlt, FaDollarSign, FaUsers } from 'react-icons/fa';
-import { AppContext } from '../context/AppContext';  // Import the AppContext
+import React from "react";
+import { Link } from "react-router-dom";
+import { FaHome, FaUser, FaSignOutAlt, FaDollarSign, FaUsers } from "react-icons/fa";
+import useUserData from "../../hooks/useUsersData";  // Custom hook for user data
+import useLogout from "../../hooks/useLogout.js";  // Custom hook for logout
 
 const Sidebar = () => {
-  const navigate = useNavigate();
-  const { setIsLoggedin, setUserData, userData, getUserData } = useContext(AppContext);  // Access context data and methods
-
-  // Function to handle logout
-  const handleLogout = () => {
-    setIsLoggedin(false);  // Set logged-in state to false
-    navigate('/login');    // Redirect to login page
-  };
-
-  // Log the user data to check if it's accessible
-  useEffect(() => {
-    console.log('Sidebar userData:', userData); // Log the userData on sidebar render
-
-    if (!userData) {  // Only fetch user data if it's not already available
-      getUserData(); // Fetch user data when the component mounts
-    }
-  }, [getUserData, userData]); // Dependency array ensures it runs only when needed
+  const userData = useUserData();  // Get user data from custom hook
+  const handleLogout = useLogout();  // Get the logout function from custom hook
 
   return (
     <div className="bg-maroon text-white w-64 min-h-screen p-5">
       {/* Admin Profile Section */}
       <div className="text-center mb-10">
         <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3" />
-        <p className="font-semibold">{userData ? userData.name : 'Admin Name'}</p> {/* Admin Name */}
-        <p className="text-sm">{userData ? userData.email : 'admin@example.com'}</p> {/* Admin Email */}
+        <p className="font-semibold">{userData ? userData.name : "Admin Name"}</p>
+        <p className="text-sm">{userData ? userData.email : "admin@example.com"}</p>
       </div>
 
       {/* Navigation Menu */}
