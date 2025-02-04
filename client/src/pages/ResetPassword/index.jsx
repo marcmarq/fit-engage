@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react'
-import { assets } from '../assets/assets'
+import { assets } from '../../assets/assets'
 import { useNavigate } from 'react-router-dom'
-import { AppContext } from '../context/AppContext'
+import { AppContext } from '../../context/AppContext'
 import axios from 'axios'
 import { toast } from "react-toastify";
 
@@ -59,7 +59,7 @@ const ResetPassword = () => {
     console.log("Submit email triggered");
     console.log(backendUrl);
     try {
-      const { data } = await axios.post(backendUrl + 'api/auth/send-reset-otp', { email });
+      const { data } = await axios.post(backendUrl + '/api/auth/send-reset-otp', { email });
       console.log(data); // Check the response from the backend
       data.success ? toast.success(data.message) : toast.error(data.message);
       data.success && setIsEmailSent(true);
@@ -82,7 +82,7 @@ const ResetPassword = () => {
   const onSubmitNewPassword = async (e)=> {
     e.preventDefault();
     try {
-      const {data} = await axios.post(backendUrl + 'api/auth/reset-password', 
+      const {data} = await axios.post(backendUrl + '/api/auth/reset-password', 
       {email, otp, newPassword})
       data.success ? toast.success(data.message) : toast.error(data.message)
       data.success && navigate('/login')

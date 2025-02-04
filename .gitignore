@@ -8,6 +8,7 @@ cookies.txt
 # Dev files
 *.bak
 *.org
+*.sh     
 
 # Logs
 logs
