@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from "../../context/AppContext";
-import MemberForm from "../../components/MemberForm";
-import MemberList from "../../components/MemberList";
+import MemberForm from "../../components/Members/MemberForm";
+import MemberList from "../../components/Members/MemberList";
 import useMembers from "../../hooks/useMembers";
 
 
@@ -176,182 +176,30 @@ const Members = () => {
     return <div>Loading...</div>;
   }
 
-  return (
+   return (
     <div>
       <h2>Member Dashboard</h2>
 
-      {/* Registration and Editing Form */}
-      <h3>{editingMemberId ? "Edit Member" : "Register a New Member"}</h3>
-      <form onSubmit={handleSubmit} className="mt-6 bg-white p-6 rounded-lg shadow-md">
-        <div className="mb-4">
-          <label className="block text-gray-700">First Name</label>
-          <input
-            type="text"
-            className="w-full p-3 border rounded-md"
-            value={formData.firstName}
-            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Last Name</label>
-          <input
-            type="text"
-            className="w-full p-3 border rounded-md"
-            value={formData.lastName}
-            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-            required
-          />
-        </div>
-
-
-        <div className="mb-4">
-          <label className="block text-gray-700">Membership Expiry Date</label>
-          <input
-            type="date"
-            className="w-full p-3 border rounded-md"
-            // Convert the ISODate to yyyy-MM-dd format
-            value={formData.membershipExpiryDate ? formData.membershipExpiryDate.slice(0, 10) : ''}
-            onChange={(e) =>
-              setFormData({ ...formData, membershipExpiryDate: e.target.value })
-            }
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Membership Renewal Date</label>
-          <input
-            type="date"
-            className="w-full p-3 border rounded-md"
-            // Convert the ISODate to yyyy-MM-dd format
-            value={formData.membershipRenewal ? formData.membershipRenewal.slice(0, 10) : ''}
-            onChange={(e) =>
-              setFormData({ ...formData, membershipRenewal: e.target.value })
-            }
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Annual Membership</label>
-          <input
-            type="text"
-            className="w-full p-3 border rounded-md"
-            value={formData.annualMembership}
-            onChange={(e) => setFormData({ ...formData, annualMembership: e.target.value })}
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Notes 1</label>
-          <input
-            type="text"
-            className="w-full p-3 border rounded-md"
-            value={formData.notes1}
-            onChange={(e) => setFormData({ ...formData, notes1: e.target.value })}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Notes 2</label>
-          <input
-            type="text"
-            className="w-full p-3 border rounded-md"
-            value={formData.notes2}
-            onChange={(e) => setFormData({ ...formData, notes2: e.target.value })}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Notes 3</label>
-          <input
-            type="text"
-            className="w-full p-3 border rounded-md"
-            value={formData.notes3}
-            onChange={(e) => setFormData({ ...formData, notes3: e.target.value })}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Length (in months)</label>
-          <input
-            type="number"
-            className="w-full p-3 border rounded-md"
-            value={formData.length}
-            onChange={(e) => setFormData({ ...formData, length: e.target.value })}
-            required
-          />
-        </div>
-        <button type="submit" className="w-full bg-maroon text-white py-3 rounded-md">
-          {editingMemberId ? "Update Member" : "Register Member"}
-        </button>
-      </form>
-
-      {/* Search Input */}
-      <h3>Search Members</h3>
-      <input
-        type="text"
-        placeholder="Search by name"
-        className="w-full p-3 border rounded-md mb-4"
-        value={searchTerm}
-        onChange={handleSearch}
+      {/* Member Form */}
+      <MemberForm
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={handleSubmit}
+        isEditMode={Boolean(editingMemberId)}
       />
 
-      {/* List of Members */}
-      <h3>Membership Information</h3>
-      {filteredMembers.map((member, index) => {
-        const {
-          firstName,
-          lastName,
-          membershipExpiryDate,
-          membershipRenewal,
-          annualMembership,
-          notes1,
-          notes2,
-          notes3,
-          length,
-          id,
-        } = member;
-
-        const formattedExpiryDate = membershipExpiryDate
-          ? new Date(membershipExpiryDate).toLocaleDateString()
-          : "Invalid Date";
-
-        const formattedRenewalDate = membershipRenewal
-          ? new Date(membershipRenewal).toLocaleDateString()
-          : "Invalid Date";
-
-        return (
-          <div
-            key={index}
-            style={{ marginBottom: "20px", border: "1px solid #ccc", padding: "10px" }}
-          >
-            <p><strong>Name:</strong> {firstName} {lastName}</p>
-            <p><strong>Membership Expiry:</strong> {formattedExpiryDate}</p>
-            <p><strong>Membership Renewal:</strong> {formattedRenewalDate}</p>
-            <p><strong>Annual Membership:</strong> {annualMembership}</p>
-            <p><strong>Notes 1:</strong> {notes1}</p>
-            <p><strong>Notes 2:</strong> {notes2}</p>
-            <p><strong>Notes 3:</strong> {notes3}</p>
-            <p><strong>Length:</strong> {length}</p>
-
-
-            {/* Edit and Delete Buttons */}
-            <button
-              onClick={() => handleEdit(member)} // Pass the full member object here for edit
-              className="bg-yellow-500 text-white py-1 px-4 rounded-md mr-2"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => handleDelete(member)} // Pass the full member object here for delete
-              className="bg-red-500 text-white py-1 px-4 rounded-md"
-            >
-              Delete
-            </button>
-
-
-          </div>
-        );
-      })}
+      {/* Member List */}
+      <MemberList
+        membershipData={membershipData}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        handleEdit={handleEdit}
+        handleDelete={handleDelete}
+      />
     </div>
   );
+
+
 };
 
 export default Members;
