@@ -1,46 +1,60 @@
 import gymModel from '../models/gymModel.js';
 
+ export const updateMemberById = async (req, res) => {
+    try {
+      const { _id } = req.body; // Expecting _id in the request body
+      const memberData = req.body; // This contains the updated member data
 
-// export const addNewMember = async (req, res) => {
-//   try {
-//     const { firstName, lastName, membershipExpiryDate, membershipRenewal, annualMembership, notes1, notes2, notes3, length } = req.body;
+      const updatedMember = await gymModel.findByIdAndUpdate(
+        _id,
+        { $set: memberData },
+        { new: true }
+      );
 
-//     console.log('Request to add new member:', req.body); // Debugging log
+      if (!updatedMember) {
+        return res.status(404).json({ message: 'Member not found' });
+      }
 
-//     // Check for missing required fields
-//     if (!firstName || !lastName || !membershipExpiryDate || !membershipRenewal || !annualMembership || !length) {
-//       console.log('Missing required fields in request body'); // Debugging log
-//       return res.status(400).json({ message: 'Missing required fields' });
-//     }
+      res.status(200).json(updatedMember); // Respond with the updated member data
+    } catch (error) {
+      console.error("Error updating member by ID:", error);
+      res.status(500).json({ message: 'Error updating member', error });
+    }
+  };
 
-//     // Create a new member document
-//     const newMember = new gymModel({
-//       firstName,
-//       lastName,
-//       membershipExpiryDate,
-//       membershipRenewal,
-//       annualMembership,
-//       notes1,
-//       notes2,
-//       notes3,
-//       length
-//     });
+  export const deleteMemberById = async (req, res) => {
+    try {
+      const { _id } = req.body; // Expecting _id in the request body
 
-//     // Save the new member to the database
-//     const savedMember = await newMember.save();
+      const deletedMember = await gymModel.findByIdAndDelete(_id);
 
-//     if (!savedMember) {
-//       console.log('Failed to save new member'); // Debugging log
-//       return res.status(500).json({ message: 'Failed to save new member' });
-//     }
+      if (!deletedMember) {
+        return res.status(404).json({ message: 'Member not found' });
+      }
 
-//     console.log('New member added:', savedMember); // Debugging log
-//     res.status(201).json(savedMember); // Respond with the newly created member
-//   } catch (error) {
-//     console.error('Error adding new member:', error); // Debugging log
-//     res.status(500).json({ message: 'Server error', error });
-//   }
-// };
+      res.status(200).json(deletedMember); // Respond with the deleted member data
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      res.status(500).json({ message: 'Server error', error });
+    }
+  };
+
+  export const getMembershipInfoById = async (req, res) => {
+    try {
+      const { _id } = req.query; // Expecting _id in the query parameters
+
+      const membershipInfo = await gymModel.findById(_id);
+
+      if (!membershipInfo) {
+        return res.status(404).json({ message: 'Membership information not found' });
+      }
+
+      res.status(200).json(membershipInfo);
+    } catch (error) {
+      console.error('Error fetching membership info:', error);
+      res.status(500).json({ message: 'Server error', error });
+    }
+  };
 
 export const addNewMember = async (req, res) => {
   try {
