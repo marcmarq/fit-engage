@@ -26,7 +26,18 @@ authRouter.post("/verify-account", userAuth, verifyEmail);
 authRouter.get("/is-auth", userAuth, isAuthenticated);
 
 // Check Session
-authRouter.get("/check-session", userAuth, (req, res) => res.json({ loggedIn: true }));
+// authRouter.get("/check-session", userAuth, (req, res) => res.json({ loggedIn: true }));
+//
+
+authRouter.get("/check-session", userAuth, (req, res) => {
+  if (req.user) {
+    return res.json({ loggedIn: true, user: req.user });
+  } else {
+    return res.json({ loggedIn: false });
+  }
+});
+
+
 
 export default authRouter;
 

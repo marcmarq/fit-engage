@@ -116,6 +116,7 @@ export const AppContextProvider = ({ children }) => {
   }, []); // Run once on mount
 
   // Check login status on app initialization
+
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
@@ -124,20 +125,22 @@ export const AppContextProvider = ({ children }) => {
           credentials: "include", // Ensure cookies are included
         });
         const data = await response.json();
-        if (data.isLoggedIn) {
-          setIsLoggedin(true); // User is logged in
+
+        if (data.loggedIn) { // <-- Corrected to match backend response
+          setIsLoggedin(true);
           await getUserData(); // Fetch user data
         } else {
-          setIsLoggedin(false); // User is logged out
+          setIsLoggedin(false);
         }
       } catch (error) {
         console.error("Error checking login status:", error);
-        setIsLoggedin(false); // Fallback to logged-out state
+        setIsLoggedin(false);
       }
     };
 
     checkLoginStatus();
-  }, []); // Run only once on app load
+  }, []);
+
 
   return (
     <AppContext.Provider
