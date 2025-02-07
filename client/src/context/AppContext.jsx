@@ -110,7 +110,9 @@ export const AppContextProvider = ({ children }) => {
 
   // Use Effect Hook for Member data
   useEffect(() => {
-    getMembershipData();
+    if (isLoggedin === true) {
+      getMembershipData();
+    }
   }, []); // Run once on mount
 
   // Check login status on app initialization
