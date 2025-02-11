@@ -18,6 +18,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedStat, setSelectedStat] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(null);
   const backendUrl =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
@@ -70,8 +72,11 @@ const Dashboard = () => {
   }, [backendUrl]);
 
   const handleStatClick = (stat) => {
-    setSelectedStat(stat);
-    setShowPopup(true);
+    if (stat !== "total") {
+      setSelectedStat(stat);
+      setShowPopup(true);
+      setSearchQuery("");
+    }
   };
 
   const revenueData = [
@@ -95,23 +100,28 @@ const Dashboard = () => {
           icon={FaUsers}
           onClick={() => handleStatClick("total")}
           bgColor="bg-gray-100"
+          loading={loading}
         />
         <StatCard
           title="Overdue Members"
           value={dashboardStats?.overdueMembers || 0}
           icon={FaExclamationCircle}
           onClick={() => handleStatClick("overdue")}
+          loading={loading}
         />
         <StatCard
           title="Membership Expiring Soon"
           value={dashboardStats?.expiringSoonMembers || 0}
           icon={FaHourglass}
           onClick={() => handleStatClick("expiringSoon")}
+          loading={loading}
         />
       </div>
       <div className="mt-8 bg-white shadow-lg p-6 rounded-lg w-full">
-        <h2 className="text-center text-xl font-semibold mb-4 text-red-950">Monthly Revenue</h2>
-        <ResponsiveContainer width="100%" height={300}>
+        <h2 className="text-center text-xl font-semibold mb-4 text-red-950">
+          Monthly Revenue
+        </h2>
+        <ResponsiveContainer width="100%" height={290}>
           <LineChart data={revenueData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
@@ -140,11 +150,22 @@ const Dashboard = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-xl font-bold mb-4">Member List</h2>
+            <input
+              type="text"
+              placeholder="Search Member"
+              className="w-full p-2 border rounded mb-4"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
             <div className="overflow-y-auto max-h-96 p-2 border rounded-lg scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
               {selectedStat === "overdue" && (
                 <MemberList
                   members={membershipData.filter(
-                    (m) => new Date(m.membershipExpiryDate) < new Date()
+                    (m) =>
+                      new Date(m.membershipExpiryDate) < new Date() &&
+                      `${m.firstName} ${m.lastName}`
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase())
                   )}
                 />
               )}
@@ -156,13 +177,22 @@ const Dashboard = () => {
                     return (
                       expiryDate >= today &&
                       expiryDate <
-                        new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+                        new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) &&
+                      `${m.firstName} ${m.lastName}`
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase())
                     );
                   })}
                 />
               )}
               {selectedStat === "total" && (
-                <MemberList members={membershipData} />
+                <MemberList
+                  members={membershipData.filter((m) =>
+                    `${m.firstName} ${m.lastName}`
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase())
+                  )}
+                />
               )}
             </div>
           </motion.div>
@@ -172,21 +202,29 @@ const Dashboard = () => {
   );
 };
 
-
-const StatCard = ({ title, value, icon: Icon, onClick }) => {
+const StatCard = ({ title, value, icon: Icon, onClick, bgColor, loading }) => {
   return (
-    <div
-      className="flex items-center justify-between w-full h-36 p-6 rounded-lg bg-gray-100 cursor-pointer shadow-md hover:shadow-lg transition"
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      className={`p-6 rounded-lg shadow-md cursor-pointer ${
+        bgColor || "bg-white"
+      }`}
       onClick={onClick}
     >
-      <div className="flex items-center">
-        <Icon className="text-5xl mr-6 text-red-900" />
+      <div className="flex items-center space-x-4">
+        <Icon className="text-4xl text-red-900" />
         <div>
-          <p className="text-lg font-semibold">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+          <h2 className="text-lg font-semibold">{title}</h2>
+          {loading ? (
+            <div className="flex justify-center items-center">
+              <div className="w-6 h-6 border-4 border-gray-300 border-t-red-900 rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <p className="text-2xl font-bold">{value}</p>
+          )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -196,20 +234,59 @@ const MemberList = ({ members }) => (
       <div>No members found</div>
     ) : (
       members.map((member, index) => (
-        <div key={index} className="border-b pb-2">
-          <p>
-            <strong>Name:</strong> {`${member.firstName} ${member.lastName}`}
-          </p>
-          <p>
-            <strong>Membership Expiry Date:</strong>{" "}
-            {new Date(member.membershipExpiryDate).toLocaleDateString()}
-          </p>
-          <p>
-            <strong>Membership Renewal Date:</strong>{" "}
-            {member.membershipRenewal
-              ? new Date(member.membershipRenewal).toLocaleDateString()
-              : "N/A"}
-          </p>
+        <div
+          key={index}
+          className="border-b pb-2 flex justify-between items-center"
+        >
+          <div>
+            <p>
+              <strong>Name:</strong> {`${member.firstName} ${member.lastName}`}
+            </p>
+            <p>
+              <strong>Membership Expiry Date:</strong>{" "}
+              {new Date(member.membershipExpiryDate).toLocaleDateString()}
+            </p>
+            <p>
+              <strong>Membership Renewal Date:</strong>{" "}
+              {member.membershipRenewal
+                ? new Date(member.membershipRenewal).toLocaleDateString()
+                : "N/A"}
+            </p>
+          </div>
+          <div className="relative">
+            <select
+              className="text-green-700 font-bold px-6 py-3 text-lg cursor-pointer w-50 border border-gray-300 rounded-md"
+              onChange={(e) => console.log(`Selected: ${e.target.value}`)}
+              defaultValue=""
+            >
+              <option
+                value=""
+                disabled
+                hidden
+                className="text-gray-400 font-bold"
+              >
+                Select Payment
+              </option>
+              <option
+                value="annual"
+                className="text-yellow-600 font-bold text-lg py-3"
+              >
+                Annual
+              </option>
+              <option
+                value="monthly"
+                className="text-gray-600 font-bold text-lg py-3"
+              >
+                Monthly
+              </option>
+              <option
+                value="session"
+                className="text-orange-600 font-bold text-lg py-3"
+              >
+                Session
+              </option>
+            </select>
+          </div>
         </div>
       ))
     )}
