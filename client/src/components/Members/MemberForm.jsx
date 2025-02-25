@@ -1,119 +1,102 @@
-// components/Members/MemberForm.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
+
+const InputField = ({ label, name, type = 'text', value, onChange, required = false }) => (
+  <div className="mb-2">
+    <label className="block text-gray-700 mb-1 text-sm">{label}</label>
+    <input
+      type={type}
+      name={name}
+      className="w-full p-2 border rounded-md text-sm"
+      value={value}
+      onChange={onChange}
+      required={required}
+    />
+  </div>
+);
 
 const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
-  // Initialize form data for edit mode
   useEffect(() => {
     if (isEditMode) {
       setFormData(formData); // Set the form data if in edit mode
     }
   }, [isEditMode, formData, setFormData]);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  }, [setFormData]);
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 bg-white p-6 rounded-lg shadow-md">
-      <h3>{isEditMode ? "Edit Member" : "Register a New Member"}</h3>
-      <div className="mb-4">
-        <label className="block text-gray-700">First Name</label>
-        <input
-          type="text"
-          name="firstName"
-          className="w-full p-3 border rounded-md"
-          value={formData.firstName}
-          onChange={handleChange}
-          required
-        />
+    <form onSubmit={onSubmit} className="bg-white p-4 rounded-lg shadow-md max-w-md mx-auto">
+      <h3 className="text-xl font-bold mb-4">{isEditMode ? "Edit Member" : "Register a New Member"}</h3>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+        <InputField label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} required />
+        <InputField label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} required />
       </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Last Name</label>
-        <input
-          type="text"
-          name="lastName"
-          className="w-full p-3 border rounded-md"
-          value={formData.lastName}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Membership Expiry Date</label>
-        <input
-          type="date"
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+        <InputField
+          label="Membership Expiry Date"
           name="membershipExpiryDate"
-          className="w-full p-3 border rounded-md"
+          type="date"
           value={formData.membershipExpiryDate.slice(0, 10) || ''}
           onChange={handleChange}
           required
         />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Membership Renewal Date</label>
-        <input
-          type="date"
+        <InputField
+          label="Membership Renewal Date"
           name="membershipRenewal"
-          className="w-full p-3 border rounded-md"
+          type="date"
           value={formData.membershipRenewal.slice(0, 10) || ''}
           onChange={handleChange}
           required
         />
       </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Annual Membership</label>
-        <input
-          type="text"
+
+      <div className="mb-2">
+        <label className="block text-gray-700 mb-1 text-sm">Membership Type</label>
+        <select
+          name="membershipType"
+          className="w-full p-2 border rounded-md text-sm"
+          value={formData.membershipType}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Select Membership Type</option>
+          <option value="Annual">Annual</option>
+          <option value="Walk-In">Walk-In</option>
+          <option value="Monthly">Monthly</option>
+        </select>
+      </div>
+
+      {formData.membershipType === 'Annual' && (
+        <InputField
+          label="Annual Membership"
           name="annualMembership"
-          className="w-full p-3 border rounded-md"
           value={formData.annualMembership}
           onChange={handleChange}
           required
         />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Notes 1</label>
-        <input
-          type="text"
-          name="notes1"
-          className="w-full p-3 border rounded-md"
-          value={formData.notes1}
-          onChange={handleChange}
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Notes 2</label>
-        <input
-          type="text"
-          name="notes2"
-          className="w-full p-3 border rounded-md"
-          value={formData.notes2}
-          onChange={handleChange}
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Notes 3</label>
-        <input
-          type="text"
-          name="notes3"
-          className="w-full p-3 border rounded-md"
-          value={formData.notes3}
-          onChange={handleChange}
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700">Length (in months)</label>
-        <input
-          type="number"
-          name="length"
-          className="w-full p-3 border rounded-md"
-          value={formData.length}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      <button type="submit" className="w-full bg-maroon text-white py-3 rounded-md">
+      )}
+
+      <InputField
+        label="Notes"
+        name="notes1"
+        value={formData.notes1}
+        onChange={handleChange}
+      />
+
+      <InputField
+        label="Length (in months)"
+        name="length"
+        type="number"
+        value={formData.length}
+        onChange={handleChange}
+        required
+      />
+
+      <button type="submit" className="w-full bg-maroon text-white py-2 rounded-md">
         {isEditMode ? "Update Member" : "Register Member"}
       </button>
     </form>
@@ -121,4 +104,3 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
 };
 
 export default MemberForm;
-
