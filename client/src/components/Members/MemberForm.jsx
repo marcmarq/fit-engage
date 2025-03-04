@@ -65,8 +65,8 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
         >
           <option value="">Select Membership Type</option>
           <option value="Annual">Annual</option>
-          <option value="Walk-In">Walk-In</option>
           <option value="Monthly">Monthly</option>
+          <option value="Walk-in">Walk-in</option>
         </select>
       </div>
 
