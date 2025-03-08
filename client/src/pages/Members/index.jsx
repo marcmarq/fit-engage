@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState } from "react";
 import { AppContext } from "../../context/AppContext";
 import MemberForm from "../../components/Members/MemberForm";
 import MemberList from "../../components/Members/MemberList";
@@ -15,7 +15,7 @@ const Members = () => {
     searchTerm,
     setSearchTerm,
     editingMemberId,
-    setEditingMemberId
+    setEditingMemberId,
   } = useMembers();
 
   // Handle submit operation
@@ -24,8 +24,12 @@ const Members = () => {
 
     const memberData = {
       ...formData,
-      membershipExpiryDate: formData.membershipExpiryDate ? new Date(formData.membershipExpiryDate).toISOString() : null,
-      membershipRenewal: formData.membershipRenewal ? new Date(formData.membershipRenewal).toISOString() : null,
+      membershipExpiryDate: formData.membershipExpiryDate
+        ? new Date(formData.membershipExpiryDate).toISOString()
+        : null,
+      membershipRenewal: formData.membershipRenewal
+        ? new Date(formData.membershipRenewal).toISOString()
+        : null,
     };
 
     if (editingMemberId) {
@@ -44,19 +48,21 @@ const Members = () => {
 
         if (response.ok) {
           const updatedMember = await response.json();
-          setMembershipData(membershipData.map((member) =>
-            member._id === updatedMember._id ? updatedMember : member
-          ));
+          setMembershipData(
+            membershipData.map((member) =>
+              member._id === updatedMember._id ? updatedMember : member
+            )
+          );
           setEditingMemberId(null);
           setFormData({
-            firstName: '',
-            lastName: '',
-            membershipExpiryDate: '',
-            membershipRenewal: '',
-            annualMembership: '',
-            membershipType: '',
-            notes1: '',
-            length: '',
+            firstName: "",
+            lastName: "",
+            membershipExpiryDate: "",
+            membershipRenewal: "",
+            annualMembership: "",
+            membershipType: "",
+            notes1: "",
+            length: "",
           });
         } else {
           console.error("Failed to update member");
@@ -80,14 +86,14 @@ const Members = () => {
           const newMember = await response.json();
           setMembershipData([...membershipData, newMember]);
           setFormData({
-            firstName: '',
-            lastName: '',
-            membershipExpiryDate: '',
-            membershipRenewal: '',
-            annualMembership: '',
-            membershipType: '',
-            notes1: '',
-            length: '',
+            firstName: "",
+            lastName: "",
+            membershipExpiryDate: "",
+            membershipRenewal: "",
+            annualMembership: "",
+            membershipType: "",
+            notes1: "",
+            length: "",
           });
         } else {
           console.error("Failed to add member");
@@ -102,16 +108,16 @@ const Members = () => {
   const handleDelete = async (member) => {
     try {
       const response = await fetch(`${backendUrl}/api/gym/membership`, {
-        method: 'DELETE',
+        method: "DELETE",
         credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ _id: member._id }), // Send _id for deletion
       });
 
       if (response.ok) {
-        setMembershipData(membershipData.filter(m => m._id !== member._id));
+        setMembershipData(membershipData.filter((m) => m._id !== member._id));
       } else {
         console.error("Failed to delete member");
       }
@@ -146,7 +152,9 @@ const Members = () => {
 
   // Filter the members based on the search term
   const filteredMembers = membershipData.filter((member) =>
-    `${member.firstName} ${member.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `${member.firstName} ${member.lastName}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
