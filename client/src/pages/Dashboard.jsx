@@ -19,56 +19,103 @@ const Dashboard = () => {
   const [selectedStat, setSelectedStat] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showDropdown, setShowDropdown] = useState(null);
+  const [revenueData, setRevenueData] = useState([
+    { month: "Jan", revenue: 0 },
+    { month: "Feb", revenue: 0 },
+    { month: "Mar", revenue: 0 },
+    { month: "Apr", revenue: 0 },
+    { month: "May", revenue: 0 },
+    { month: "Jun", revenue: 0 },
+    { month: "Jul", revenue: 0 },
+    { month: "Aug", revenue: 0 },
+    { month: "Sep", revenue: 0 },
+    { month: "Oct", revenue: 0 },
+    { month: "Nov", revenue: 0 },
+    { month: "Dec", revenue: 0 },
+  ]);
   const backendUrl =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
-  useEffect(() => {
-    const fetchMembershipData = async () => {
-      try {
-        const response = await fetch(`${backendUrl}/api/gym/membership/all`, {
+  // Fetch membership data
+  const fetchMembershipData = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/gym/membership/all`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const normalizedData = data.map((member) => ({
+          firstName: member["firstName"] || "N/A",
+          lastName: member["lastName"] || "N/A",
+          membershipExpiryDate: member["membershipExpiryDate"] || "",
+          membershipRenewal: member["membershipRenewal"] || "",
+          annualMembership: member["annualMembership"] || "No",
+          notes1: member["notes1"] || "None",
+          notes2: member["notes2"] || "None",
+          notes3: member["notes3"] || "None",
+        }));
+        setMembershipData(normalizedData);
+
+        // Calculate stats
+        const today = new Date();
+        const overdueMembers = normalizedData.filter(
+          (m) => new Date(m.membershipExpiryDate) < today
+        ).length;
+        const expiringSoonMembers = normalizedData.filter((m) => {
+          const expiryDate = new Date(m.membershipExpiryDate);
+          return (
+            expiryDate >= today &&
+            expiryDate < new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+          );
+        }).length;
+
+        setDashboardStats({
+          totalMembers: normalizedData.length,
+          overdueMembers,
+          expiringSoonMembers,
+        });
+      } else {
+        console.error("Failed to fetch membership info");
+      }
+    } catch (error) {
+      console.error("Error fetching membership info:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch revenue data
+  const fetchRevenueData = async () => {
+    try {
+      const response = await fetch(
+        `${backendUrl}/api/revenue/monthly-revenue`,
+        {
           method: "GET",
           credentials: "include",
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const normalizedData = data.map((member) => ({
-            firstName: member["firstName"] || "N/A",
-            lastName: member["lastName"] || "N/A",
-            membershipExpiryDate: member["membershipExpiryDate"] || "",
-            membershipRenewal: member["membershipRenewal"] || "",
-            annualMembership: member["annualMembership"] || "No",
-            notes1: member["notes1"] || "None",
-            notes2: member["notes2"] || "None",
-            notes3: member["notes3"] || "None",
-          }));
-          setMembershipData(normalizedData);
-          setDashboardStats({
-            totalMembers: normalizedData.length,
-            overdueMembers: normalizedData.filter(
-              (m) => new Date(m.membershipExpiryDate) < new Date()
-            ).length,
-            expiringSoonMembers: normalizedData.filter((m) => {
-              const expiryDate = new Date(m.membershipExpiryDate);
-              const today = new Date();
-              return (
-                expiryDate >= today &&
-                expiryDate < new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-              );
-            }).length,
-          });
-        } else {
-          console.error("Failed to fetch membership info");
         }
-      } catch (error) {
-        console.error("Error fetching membership info:", error);
-      } finally {
-        setLoading(false);
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setRevenueData(data);
+      } else {
+        console.error("Failed to fetch revenue info");
       }
+    } catch (error) {
+      console.error("Error fetching revenue data:", error);
+    }
+  };
+
+  // Fetch all data when the component mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchMembershipData();
+      await fetchRevenueData();
     };
 
-    fetchMembershipData();
+    fetchData();
   }, [backendUrl]);
 
   const handleStatClick = (stat) => {
@@ -79,14 +126,89 @@ const Dashboard = () => {
     }
   };
 
-  const revenueData = [
-    { month: "Jan", revenue: 4000 },
-    { month: "Feb", revenue: 3000 },
-    { month: "Mar", revenue: 5000 },
-    { month: "Apr", revenue: 7000 },
-    { month: "May", revenue: 6000 },
-    { month: "Jun", revenue: 8000 },
-  ];
+  const handleAddPayment = async (member, paymentType) => {
+    if (!paymentType) {
+      alert("Please select a membership type before adding payment.");
+      return;
+    }
+
+    const amount =
+      paymentType === "annual" ? 1200 : paymentType === "monthly" ? 1500 : 250;
+
+    // Calculate the expiry date based on the payment type
+    const expiryDate = new Date();
+    if (paymentType === "annual") {
+      expiryDate.setMonth(expiryDate.getMonth() + 1); // Add 1 month for annual payments
+    } else if (paymentType === "monthly") {
+      expiryDate.setMonth(expiryDate.getMonth() + 1); // Add 1 month for monthly payments
+    } else if (paymentType === "walk-in") {
+      expiryDate.setDate(expiryDate.getDate() + 1); // Add 1 day for walk-in payments
+    }
+
+    const paymentData = {
+      date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
+      member: `${member.firstName} ${member.lastName}`,
+      amount: amount,
+      type: paymentType,
+      expiry: expiryDate.toISOString().split("T")[0], // Expiry date in YYYY-MM-DD format
+    };
+
+    try {
+      // Step 1: Add the payment
+      const paymentResponse = await fetch(
+        `${backendUrl}/api/payments/payments`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(paymentData),
+        }
+      );
+
+      if (!paymentResponse.ok) {
+        throw new Error("Failed to add payment");
+      }
+
+      // Step 2: Update the member's status in the backend
+      const updateResponse = await fetch(
+        `${backendUrl}/api/update-membership/update-membership`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            firstName: member.firstName,
+            lastName: member.lastName,
+            membershipExpiryDate: expiryDate.toISOString().split("T")[0],
+          }),
+        }
+      );
+
+      if (!updateResponse.ok) {
+        throw new Error("Failed to update member status");
+      }
+
+      // Step 3: Remove the member from the list
+      setMembershipData((prevData) =>
+        prevData.filter(
+          (m) =>
+            m.firstName !== member.firstName || m.lastName !== member.lastName
+        )
+      );
+
+      // Step 4: Fetch updated revenue data
+      await fetchRevenueData();
+
+      alert("Payment added successfully!");
+    } catch (error) {
+      console.error("Error adding payment:", error);
+      alert("Failed to add payment. Please try again.");
+    }
+  };
 
   return (
     <div className="p-6">
@@ -167,6 +289,7 @@ const Dashboard = () => {
                         .toLowerCase()
                         .includes(searchQuery.toLowerCase())
                   )}
+                  onAddPayment={handleAddPayment}
                 />
               )}
               {selectedStat === "expiringSoon" && (
@@ -183,6 +306,7 @@ const Dashboard = () => {
                         .includes(searchQuery.toLowerCase())
                     );
                   })}
+                  onAddPayment={handleAddPayment}
                 />
               )}
               {selectedStat === "total" && (
@@ -192,6 +316,7 @@ const Dashboard = () => {
                       .toLowerCase()
                       .includes(searchQuery.toLowerCase())
                   )}
+                  onAddPayment={handleAddPayment}
                 />
               )}
             </div>
@@ -228,69 +353,62 @@ const StatCard = ({ title, value, icon: Icon, onClick, bgColor, loading }) => {
   );
 };
 
-const MemberList = ({ members }) => (
-  <div className="space-y-4">
-    {members.length === 0 ? (
-      <div>No members found</div>
-    ) : (
-      members.map((member, index) => (
-        <div
-          key={index}
-          className="border-b pb-2 flex justify-between items-center"
+const MemberList = ({ members, onAddPayment }) => {
+  return (
+    <div className="space-y-4">
+      {members.length === 0 ? (
+        <div>No members found</div>
+      ) : (
+        members.map((member, index) => (
+          <MemberItem key={index} member={member} onAddPayment={onAddPayment} />
+        ))
+      )}
+    </div>
+  );
+};
+
+const MemberItem = ({ member, onAddPayment }) => {
+  const [selectedPaymentType, setSelectedPaymentType] = useState("");
+
+  return (
+    <div className="border-b pb-2 flex justify-between items-center">
+      <div>
+        <p>
+          <strong>Name:</strong> {`${member.firstName} ${member.lastName}`}
+        </p>
+        <p>
+          <strong>Membership Expiry Date:</strong>{" "}
+          {new Date(member.membershipExpiryDate).toLocaleDateString()}
+        </p>
+        <p>
+          <strong>Membership Renewal Date:</strong>{" "}
+          {member.membershipRenewal
+            ? new Date(member.membershipRenewal).toLocaleDateString()
+            : "N/A"}
+        </p>
+      </div>
+      <div className="relative flex flex-col gap-4 mt-6">
+        <select
+          className="w-full px-4 py-3 border rounded text-gray-700 bg-white shadow-sm text-lg font-semibold focus:ring focus:ring-blue-300"
+          onChange={(e) => setSelectedPaymentType(e.target.value)}
+          value={selectedPaymentType}
         >
-          <div>
-            <p>
-              <strong>Name:</strong> {`${member.firstName} ${member.lastName}`}
-            </p>
-            <p>
-              <strong>Membership Expiry Date:</strong>{" "}
-              {new Date(member.membershipExpiryDate).toLocaleDateString()}
-            </p>
-            <p>
-              <strong>Membership Renewal Date:</strong>{" "}
-              {member.membershipRenewal
-                ? new Date(member.membershipRenewal).toLocaleDateString()
-                : "N/A"}
-            </p>
-          </div>
-          <div className="relative">
-            <select
-              className="text-green-700 font-bold px-6 py-3 text-lg cursor-pointer w-50 border border-gray-300 rounded-md"
-              onChange={(e) => console.log(`Selected: ${e.target.value}`)}
-              defaultValue=""
-            >
-              <option
-                value=""
-                disabled
-                hidden
-                className="text-gray-400 font-bold"
-              >
-                Select Payment
-              </option>
-              <option
-                value="annual"
-                className="text-yellow-600 font-bold text-lg py-3"
-              >
-                Annual
-              </option>
-              <option
-                value="monthly"
-                className="text-gray-600 font-bold text-lg py-3"
-              >
-                Monthly
-              </option>
-              <option
-                value="session"
-                className="text-orange-600 font-bold text-lg py-3"
-              >
-                Session
-              </option>
-            </select>
-          </div>
-        </div>
-      ))
-    )}
-  </div>
-);
+          <option value="" disabled>
+            Select Payment
+          </option>
+          <option value="annual">Annual</option>
+          <option value="monthly">Monthly</option>
+          <option value="walk-in">Walk-in</option>
+        </select>
+        <button
+          className="w-full px-4 py-3 bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg shadow-md hover:from-green-500 hover:to-green-700 transition-all duration-300"
+          onClick={() => onAddPayment(member, selectedPaymentType)}
+        >
+          Add Payment
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default Dashboard;

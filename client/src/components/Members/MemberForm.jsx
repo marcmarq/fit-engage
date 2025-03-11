@@ -1,6 +1,13 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from "react";
 
-const InputField = ({ label, name, type = 'text', value, onChange, required = false }) => (
+const InputField = ({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  required = false,
+}) => (
   <div className="mb-2">
     <label className="block text-gray-700 mb-1 text-sm">{label}</label>
     <input
@@ -21,18 +28,38 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
     }
   }, [isEditMode, formData, setFormData]);
 
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-  }, [setFormData]);
+  const handleChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      setFormData((prevData) => ({ ...prevData, [name]: value }));
+    },
+    [setFormData]
+  );
 
   return (
-    <form onSubmit={onSubmit} className="bg-white p-4 rounded-lg shadow-md max-w-md mx-auto">
-      <h3 className="text-xl font-bold mb-4">{isEditMode ? "Edit Member" : "Register a New Member"}</h3>
+    <form
+      onSubmit={onSubmit}
+      className="bg-white p-4 rounded-lg shadow-md max-w-md mx-auto"
+    >
+      <h3 className="text-xl font-bold mb-4">
+        {isEditMode ? "Edit Member" : "Register a New Member"}
+      </h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-        <InputField label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} required />
-        <InputField label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} required />
+        <InputField
+          label="First Name"
+          name="firstName"
+          value={formData.firstName}
+          onChange={handleChange}
+          required
+        />
+        <InputField
+          label="Last Name"
+          name="lastName"
+          value={formData.lastName}
+          onChange={handleChange}
+          required
+        />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
@@ -40,7 +67,7 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
           label="Membership Expiry Date"
           name="membershipExpiryDate"
           type="date"
-          value={formData.membershipExpiryDate.slice(0, 10) || ''}
+          value={formData.membershipExpiryDate.slice(0, 10) || ""}
           onChange={handleChange}
           required
         />
@@ -48,14 +75,16 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
           label="Membership Renewal Date"
           name="membershipRenewal"
           type="date"
-          value={formData.membershipRenewal.slice(0, 10) || ''}
+          value={formData.membershipRenewal.slice(0, 10) || ""}
           onChange={handleChange}
           required
         />
       </div>
 
       <div className="mb-2">
-        <label className="block text-gray-700 mb-1 text-sm">Membership Type</label>
+        <label className="block text-gray-700 mb-1 text-sm">
+          Membership Type
+        </label>
         <select
           name="membershipType"
           className="w-full p-2 border rounded-md text-sm"
@@ -70,7 +99,7 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
         </select>
       </div>
 
-      {formData.membershipType === 'Annual' && (
+      {formData.membershipType === "Annual" && (
         <InputField
           label="Annual Membership"
           name="annualMembership"
@@ -96,7 +125,10 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
         required
       />
 
-      <button type="submit" className="w-full bg-maroon text-white py-2 rounded-md">
+      <button
+        type="submit"
+        className="w-full bg-maroon text-white py-2 rounded-md"
+      >
         {isEditMode ? "Update Member" : "Register Member"}
       </button>
     </form>

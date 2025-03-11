@@ -81,7 +81,7 @@ const MemberList = ({ members }) => {
         <div>No members found</div>
       ) : (
         members.map((member, index) => (
-          <div key={index} className="border-b pb-2">
+          <div key={index} className="border-b pb-4">
             <p>
               <strong>Name:</strong> {`${member.firstName} ${member.lastName}`}
             </p>
@@ -93,6 +93,9 @@ const MemberList = ({ members }) => {
               <strong>Membership Renewal Date:</strong>{" "}
               {member.membershipRenewal ? new Date(member.membershipRenewal).toLocaleDateString() : "N/A"}
             </p>
+            <div className="flex flex-col gap-4 mt-4">
+              <button className="w-full px-4 py-2 bg-blue-500 text-white rounded">Select Payments</button>
+            </div>
           </div>
         ))
       )}
@@ -101,4 +104,3 @@ const MemberList = ({ members }) => {
 };
 
 export default Dashboard;
-
