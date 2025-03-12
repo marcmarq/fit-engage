@@ -1,20 +1,41 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-// Define the schema for the members collection
-const memberSchema = new mongoose.Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  membershipExpiryDate: { type: Date, required: true },
-  membershipRenewal: { type: Date, required: true },
-  membershipType: { type: String, required: true }, 
-  annualMembership: { type: String, required: true },
-  notes1: { type: String, default: '' },
-  notes2: { type: String, default: '' },
-  notes3: { type: String, default: '' },
-  length: { type: Number, required: true },
-});
+const memberSchema = new mongoose.Schema(
+  {
+    firstName: { type: String, required: true, index: true }, // Index for faster queries
+    lastName: { type: String, required: true, index: true }, // Index for faster queries
+    membershipExpiryDate: {
+      type: Date,
+      required: true, // No default value
+    },
+    membershipRenewal: {
+      type: Date,
+      required: true, // No default value
+    },
+    membershipType: {
+      type: String,
+      required: true,
+      enum: ["Annual", "Monthly", "Walk-in"], // Validate membership type
+    },
+    annualMembership: { type: String, default: "No" }, // Default to "No"
+    notes1: { type: String, default: "" }, // Optional field
+    notes2: { type: String, default: "" }, // Optional field
+    notes3: { type: String, default: "" }, // Optional field
+    length: {
+      type: Number,
+      required: true,
+      min: 1, // Ensure length is a positive number
+    },
+  },
+  {
+    timestamps: true, // Automatically add createdAt and updatedAt fields
+  }
+);
 
-// Create the model for 'members' collection
-const memberModel = mongoose.model('Member', memberSchema, 'members');
+// Add indexes for frequently queried fields
+memberSchema.index({ firstName: 1, lastName: 1 });
+memberSchema.index({ membershipExpiryDate: 1 });
+
+const memberModel = mongoose.model("Member", memberSchema, "members");
 
 export default memberModel;

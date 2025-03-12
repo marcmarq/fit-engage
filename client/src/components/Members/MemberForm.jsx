@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useCallback } from "react";
 
 const InputField = ({
   label,
@@ -22,12 +22,6 @@ const InputField = ({
 );
 
 const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
-  useEffect(() => {
-    if (isEditMode) {
-      setFormData(formData); // Set the form data if in edit mode
-    }
-  }, [isEditMode, formData, setFormData]);
-
   const handleChange = useCallback(
     (e) => {
       const { name, value } = e.target;
@@ -44,7 +38,6 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
       <h3 className="text-xl font-bold mb-4">
         {isEditMode ? "Edit Member" : "Register a New Member"}
       </h3>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
         <InputField
           label="First Name"
@@ -61,13 +54,12 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
           required
         />
       </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
         <InputField
           label="Membership Expiry Date"
           name="membershipExpiryDate"
           type="date"
-          value={formData.membershipExpiryDate.slice(0, 10) || ""}
+          value={formData.membershipExpiryDate}
           onChange={handleChange}
           required
         />
@@ -75,12 +67,11 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
           label="Membership Renewal Date"
           name="membershipRenewal"
           type="date"
-          value={formData.membershipRenewal.slice(0, 10) || ""}
+          value={formData.membershipRenewal}
           onChange={handleChange}
           required
         />
       </div>
-
       <div className="mb-2">
         <label className="block text-gray-700 mb-1 text-sm">
           Membership Type
@@ -98,24 +89,12 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
           <option value="Walk-in">Walk-in</option>
         </select>
       </div>
-
-      {formData.membershipType === "Annual" && (
-        <InputField
-          label="Annual Membership"
-          name="annualMembership"
-          value={formData.annualMembership}
-          onChange={handleChange}
-          required
-        />
-      )}
-
       <InputField
         label="Notes"
         name="notes1"
         value={formData.notes1}
         onChange={handleChange}
       />
-
       <InputField
         label="Length (in months)"
         name="length"
@@ -124,7 +103,6 @@ const MemberForm = ({ formData, setFormData, onSubmit, isEditMode }) => {
         onChange={handleChange}
         required
       />
-
       <button
         type="submit"
         className="w-full bg-maroon text-white py-2 rounded-md"

@@ -12,6 +12,30 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 
+// Constants for payment types
+const PAYMENT_TYPES = {
+  ANNUAL: "annual",
+  MONTHLY: "monthly",
+  WALK_IN: "walk-in",
+};
+
+// Custom hook for debouncing
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const Dashboard = () => {
   const [membershipData, setMembershipData] = useState([]);
   const [dashboardStats, setDashboardStats] = useState(null);
@@ -35,6 +59,9 @@ const Dashboard = () => {
   ]);
   const backendUrl =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+
+  // Debounced search query
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Fetch membership data
   const fetchMembershipData = async () => {
@@ -118,6 +145,7 @@ const Dashboard = () => {
     fetchData();
   }, [backendUrl]);
 
+  // Handle stat card click
   const handleStatClick = (stat) => {
     if (stat !== "total") {
       setSelectedStat(stat);
@@ -126,6 +154,7 @@ const Dashboard = () => {
     }
   };
 
+  // Handle adding a payment
   const handleAddPayment = async (member, paymentType) => {
     if (!paymentType) {
       alert("Please select a membership type before adding payment.");
@@ -133,15 +162,19 @@ const Dashboard = () => {
     }
 
     const amount =
-      paymentType === "annual" ? 1200 : paymentType === "monthly" ? 1500 : 250;
+      paymentType === PAYMENT_TYPES.ANNUAL
+        ? 1200
+        : paymentType === PAYMENT_TYPES.MONTHLY
+        ? 1500
+        : 250;
 
     // Calculate the expiry date based on the payment type
     const expiryDate = new Date();
-    if (paymentType === "annual") {
-      expiryDate.setMonth(expiryDate.getMonth() + 1); // Add 1 month for annual payments
-    } else if (paymentType === "monthly") {
+    if (paymentType === PAYMENT_TYPES.ANNUAL) {
+      expiryDate.setMonth(expiryDate.getMonth() + 12); // Add 12 months for annual payments
+    } else if (paymentType === PAYMENT_TYPES.MONTHLY) {
       expiryDate.setMonth(expiryDate.getMonth() + 1); // Add 1 month for monthly payments
-    } else if (paymentType === "walk-in") {
+    } else if (paymentType === PAYMENT_TYPES.WALK_IN) {
       expiryDate.setDate(expiryDate.getDate() + 1); // Add 1 day for walk-in payments
     }
 
@@ -168,7 +201,8 @@ const Dashboard = () => {
       );
 
       if (!paymentResponse.ok) {
-        throw new Error("Failed to add payment");
+        const errorData = await paymentResponse.json();
+        throw new Error(errorData.message || "Failed to add payment");
       }
 
       // Step 2: Update the member's status in the backend
@@ -189,7 +223,8 @@ const Dashboard = () => {
       );
 
       if (!updateResponse.ok) {
-        throw new Error("Failed to update member status");
+        const errorData = await updateResponse.json();
+        throw new Error(errorData.message || "Failed to update member status");
       }
 
       // Step 3: Remove the member from the list
@@ -206,9 +241,33 @@ const Dashboard = () => {
       alert("Payment added successfully!");
     } catch (error) {
       console.error("Error adding payment:", error);
-      alert("Failed to add payment. Please try again.");
+      alert(`Failed to add payment: ${error.message}`);
     }
   };
+
+  // Filter members based on the selected stat and search query
+  const filteredMembers = membershipData.filter((m) => {
+    const fullName = `${m.firstName} ${m.lastName}`.toLowerCase();
+    const searchTerm = debouncedSearchQuery.toLowerCase();
+
+    if (selectedStat === "overdue") {
+      return (
+        new Date(m.membershipExpiryDate) < new Date() &&
+        fullName.includes(searchTerm)
+      );
+    } else if (selectedStat === "expiringSoon") {
+      const expiryDate = new Date(m.membershipExpiryDate);
+      const today = new Date();
+      return (
+        expiryDate >= today &&
+        expiryDate < new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) &&
+        fullName.includes(searchTerm)
+      );
+    } else if (selectedStat === "total") {
+      return fullName.includes(searchTerm);
+    }
+    return false;
+  });
 
   return (
     <div className="p-6">
@@ -272,53 +331,28 @@ const Dashboard = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-xl font-bold mb-4">Member List</h2>
-            <input
-              type="text"
-              placeholder="Search Member"
-              className="w-full p-2 border rounded mb-4"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search Member"
+                className="w-full p-2 border rounded mb-4"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  className="absolute right-2 top-2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setSearchQuery("")}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             <div className="overflow-y-auto max-h-96 p-2 border rounded-lg scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
-              {selectedStat === "overdue" && (
-                <MemberList
-                  members={membershipData.filter(
-                    (m) =>
-                      new Date(m.membershipExpiryDate) < new Date() &&
-                      `${m.firstName} ${m.lastName}`
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase())
-                  )}
-                  onAddPayment={handleAddPayment}
-                />
-              )}
-              {selectedStat === "expiringSoon" && (
-                <MemberList
-                  members={membershipData.filter((m) => {
-                    const expiryDate = new Date(m.membershipExpiryDate);
-                    const today = new Date();
-                    return (
-                      expiryDate >= today &&
-                      expiryDate <
-                        new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) &&
-                      `${m.firstName} ${m.lastName}`
-                        .toLowerCase()
-                        .includes(searchQuery.toLowerCase())
-                    );
-                  })}
-                  onAddPayment={handleAddPayment}
-                />
-              )}
-              {selectedStat === "total" && (
-                <MemberList
-                  members={membershipData.filter((m) =>
-                    `${m.firstName} ${m.lastName}`
-                      .toLowerCase()
-                      .includes(searchQuery.toLowerCase())
-                  )}
-                  onAddPayment={handleAddPayment}
-                />
-              )}
+              <MemberList
+                members={filteredMembers}
+                onAddPayment={handleAddPayment}
+              />
             </div>
           </motion.div>
         </motion.div>
@@ -327,6 +361,7 @@ const Dashboard = () => {
   );
 };
 
+// StatCard component
 const StatCard = ({ title, value, icon: Icon, onClick, bgColor, loading }) => {
   return (
     <motion.div
@@ -353,6 +388,7 @@ const StatCard = ({ title, value, icon: Icon, onClick, bgColor, loading }) => {
   );
 };
 
+// MemberList component
 const MemberList = ({ members, onAddPayment }) => {
   return (
     <div className="space-y-4">
@@ -367,8 +403,20 @@ const MemberList = ({ members, onAddPayment }) => {
   );
 };
 
+// MemberItem component
 const MemberItem = ({ member, onAddPayment }) => {
   const [selectedPaymentType, setSelectedPaymentType] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handlePayment = async () => {
+    if (!selectedPaymentType) {
+      alert("Please select a membership type before adding payment.");
+      return;
+    }
+    setIsLoading(true);
+    await onAddPayment(member, selectedPaymentType);
+    setIsLoading(false);
+  };
 
   return (
     <div className="border-b pb-2 flex justify-between items-center">
@@ -392,19 +440,21 @@ const MemberItem = ({ member, onAddPayment }) => {
           className="w-full px-4 py-3 border rounded text-gray-700 bg-white shadow-sm text-lg font-semibold focus:ring focus:ring-blue-300"
           onChange={(e) => setSelectedPaymentType(e.target.value)}
           value={selectedPaymentType}
+          disabled={isLoading}
         >
           <option value="" disabled>
             Select Payment
           </option>
-          <option value="annual">Annual</option>
-          <option value="monthly">Monthly</option>
-          <option value="walk-in">Walk-in</option>
+          <option value={PAYMENT_TYPES.ANNUAL}>Annual</option>
+          <option value={PAYMENT_TYPES.MONTHLY}>Monthly</option>
+          <option value={PAYMENT_TYPES.WALK_IN}>Walk-in</option>
         </select>
         <button
           className="w-full px-4 py-3 bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg shadow-md hover:from-green-500 hover:to-green-700 transition-all duration-300"
-          onClick={() => onAddPayment(member, selectedPaymentType)}
+          onClick={handlePayment}
+          disabled={isLoading}
         >
-          Add Payment
+          {isLoading ? "Processing..." : "Add Payment"}
         </button>
       </div>
     </div>

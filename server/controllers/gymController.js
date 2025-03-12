@@ -8,8 +8,8 @@ export const addNewMember = async (req, res) => {
       lastName,
       membershipExpiryDate,
       membershipRenewal,
-      membershipType, // Added membershipType
-      annualMembership,
+      membershipType,
+      annualMembership = "", // Make it optional with a default value
       notes1 = "",
       notes2 = "",
       notes3 = "",
@@ -22,8 +22,7 @@ export const addNewMember = async (req, res) => {
       !lastName ||
       !membershipExpiryDate ||
       !membershipRenewal ||
-      !membershipType || // Added validation
-      !annualMembership ||
+      !membershipType ||
       !length
     ) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -35,8 +34,8 @@ export const addNewMember = async (req, res) => {
       lastName,
       membershipExpiryDate,
       membershipRenewal,
-      membershipType, // Include membershipType
-      annualMembership,
+      membershipType,
+      annualMembership, // Optional field
       notes1,
       notes2,
       notes3,

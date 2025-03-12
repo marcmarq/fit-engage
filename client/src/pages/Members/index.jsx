@@ -1,6 +1,5 @@
 import React, { useContext, useState } from "react";
 import { AppContext } from "../../context/AppContext";
-import MemberForm from "../../components/Members/MemberForm";
 import MemberList from "../../components/Members/MemberList";
 import useMembers from "../../hooks/useMembers";
 
@@ -18,62 +17,50 @@ const Members = () => {
     setEditingMemberId,
   } = useMembers();
 
-  // Handle submit operation
+  // Handle form submission (add or update member)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate required fields
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.membershipExpiryDate ||
+      !formData.membershipRenewal ||
+      !formData.membershipType ||
+      !formData.length
+    ) {
+      console.error("Missing required fields");
+      return;
+    }
+
+    // Prepare the payload
     const memberData = {
       ...formData,
-      membershipExpiryDate: formData.membershipExpiryDate
-        ? new Date(formData.membershipExpiryDate).toISOString()
-        : null,
-      membershipRenewal: formData.membershipRenewal
-        ? new Date(formData.membershipRenewal).toISOString()
-        : null,
+      membershipExpiryDate: new Date(
+        formData.membershipExpiryDate
+      ).toISOString(),
+      membershipRenewal: new Date(formData.membershipRenewal).toISOString(),
     };
 
-    if (editingMemberId) {
-      try {
-        const response = await fetch(`${backendUrl}/api/gym/membership/edit`, {
+    try {
+      let response;
+      if (editingMemberId) {
+        // Update member
+        response = await fetch(`${backendUrl}/api/gym/membership/edit`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
             ...memberData,
-            _id: editingMemberId, // Ensure _id is included
+            _id: editingMemberId, // Include the _id for updates
           }),
           credentials: "include",
         });
-
-        if (response.ok) {
-          const updatedMember = await response.json();
-          setMembershipData(
-            membershipData.map((member) =>
-              member._id === updatedMember._id ? updatedMember : member
-            )
-          );
-          setEditingMemberId(null);
-          setFormData({
-            firstName: "",
-            lastName: "",
-            membershipExpiryDate: "",
-            membershipRenewal: "",
-            annualMembership: "",
-            membershipType: "",
-            notes1: "",
-            length: "",
-          });
-        } else {
-          console.error("Failed to update member");
-        }
-      } catch (error) {
-        console.error("Error updating member:", error);
-      }
-    } else {
-      // Add new member logic
-      try {
-        const response = await fetch(`${backendUrl}/api/gym/membership`, {
+      } else {
+        // Add new member
+        response = await fetch(`${backendUrl}/api/gym/membership`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -81,26 +68,38 @@ const Members = () => {
           body: JSON.stringify(memberData),
           credentials: "include",
         });
-
-        if (response.ok) {
-          const newMember = await response.json();
-          setMembershipData([...membershipData, newMember]);
-          setFormData({
-            firstName: "",
-            lastName: "",
-            membershipExpiryDate: "",
-            membershipRenewal: "",
-            annualMembership: "",
-            membershipType: "",
-            notes1: "",
-            length: "",
-          });
-        } else {
-          console.error("Failed to add member");
-        }
-      } catch (error) {
-        console.error("Error adding member:", error);
       }
+
+      if (response.ok) {
+        const result = await response.json();
+        if (editingMemberId) {
+          // Update the member in the list
+          setMembershipData(
+            membershipData.map((member) =>
+              member._id === result._id ? result : member
+            )
+          );
+          setEditingMemberId(null); // Reset editing state
+        } else {
+          // Add the new member to the list
+          setMembershipData([...membershipData, result]);
+        }
+        // Reset the form
+        setFormData({
+          firstName: "",
+          lastName: "",
+          membershipExpiryDate: "",
+          membershipRenewal: "",
+          membershipType: "",
+          notes1: "",
+          length: "",
+        });
+      } else {
+        const errorResponse = await response.json();
+        console.error("Error:", errorResponse);
+      }
+    } catch (error) {
+      console.error("Error:", error);
     }
   };
 
@@ -109,40 +108,38 @@ const Members = () => {
     try {
       const response = await fetch(`${backendUrl}/api/gym/membership`, {
         method: "DELETE",
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ _id: member._id }), // Send _id for deletion
+        body: JSON.stringify({ _id: member._id }),
+        credentials: "include",
       });
 
       if (response.ok) {
+        // Remove the member from the list
         setMembershipData(membershipData.filter((m) => m._id !== member._id));
       } else {
-        console.error("Failed to delete member");
+        const errorResponse = await response.json();
+        console.error("Error:", errorResponse);
       }
     } catch (error) {
-      console.error("Error deleting member:", error);
+      console.error("Error:", error);
     }
   };
 
   // Handle edit operation
+  // Handle edit operation
   const handleEdit = (member) => {
-    const memberToEdit = membershipData.find((m) => m._id === member._id); // Use _id to find the member
-
-    if (memberToEdit) {
-      setEditingMemberId(memberToEdit._id); // Set _id as the editing state
-      setFormData({
-        firstName: memberToEdit.firstName,
-        lastName: memberToEdit.lastName,
-        membershipExpiryDate: memberToEdit.membershipExpiryDate.slice(0, 10),
-        membershipRenewal: memberToEdit.membershipRenewal.slice(0, 10),
-        annualMembership: memberToEdit.annualMembership,
-        membershipType: memberToEdit.membershipType,
-        notes1: memberToEdit.notes1,
-        length: memberToEdit.length,
-      });
-    }
+    setEditingMemberId(member._id); // Set the _id of the member being edited
+    setFormData({
+      firstName: member.firstName,
+      lastName: member.lastName,
+      membershipExpiryDate: member.membershipExpiryDate.slice(0, 10), // Format date for the input field
+      membershipRenewal: member.membershipRenewal.slice(0, 10), // Format date for the input field
+      membershipType: member.membershipType,
+      notes1: member.notes1,
+      length: member.length,
+    });
   };
 
   // Handle search functionality
@@ -150,7 +147,7 @@ const Members = () => {
     setSearchTerm(e.target.value);
   };
 
-  // Filter the members based on the search term
+  // Filter members based on the search term
   const filteredMembers = membershipData.filter((member) =>
     `${member.firstName} ${member.lastName}`
       .toLowerCase()
@@ -164,7 +161,7 @@ const Members = () => {
   return (
     <div>
       <MemberList
-        membershipData={membershipData}
+        membershipData={filteredMembers}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         handleEdit={handleEdit}

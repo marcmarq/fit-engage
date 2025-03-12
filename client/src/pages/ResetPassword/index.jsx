@@ -1,167 +1,275 @@
-import React, { useContext, useState } from 'react'
-import { assets } from '../../assets/assets'
-import { useNavigate } from 'react-router-dom'
-import { AppContext } from '../../context/AppContext'
-import axios from 'axios'
-import { toast } from "react-toastify";
+import React, { useState, useEffect } from "react";
+import { FaMoneyBillWave, FaTrash } from "react-icons/fa";
 
-const ResetPassword = () => {
+const Payments = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc"); // Default to "desc" for most recent first
+  const [filterType, setFilterType] = useState("all"); // Filter by payment type
+  const [filterMonth, setFilterMonth] = useState("all"); // Filter by month
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1); // Current page number
+  const [itemsPerPage, setItemsPerPage] = useState(10); // Number of items per page
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
-  const {backendUrl} = useContext(AppContext)
-  axios.defaults.withCredentials = true
+  // Fetch payments from the backend
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const response = await fetch(`${backendUrl}/api/payments/payments`, {
+          method: "GET",
+          credentials: "include",
+        });
 
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [isEmailSent, setIsEmailSent] = useState('')
-  const [otp, setOtp] = useState(0)
-  const [isOtpSubmitted, setIsOtpSubmitted] = useState(false)
-
-  const inputRefs = React.useRef([])
-
-  const handleInput = (e, index)=> {
-    if(e.target.value.length > 0 && index < inputRefs.current.length - 1){
-      inputRefs.current[index + 1].focus();
-    }
-  }
-
-  const handleKeyDown = (e, index) => {
-    if(e.key === 'Backspace' && e.target.value === '' & index > 0){
-      inputRefs.current[index - 1].focus();
-    }
-  }
-
-  const handlePaste = (e)=> {
-    const paste = e.clipboardData.getData('text')
-    const pasteArray = paste.split('')
-    pasteArray.forEach((char, index)=>{
-      if(inputRefs.current[index]){
-        inputRefs.current[index].value = char;
+        if (response.ok) {
+          const data = await response.json();
+          setPayments(data);
+        } else {
+          throw new Error("Failed to fetch payments");
+        }
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
-    })
-  }
+    };
 
-//   const onSubmitEmail = async (e)=>{
-//     e.preventDefault();
-//     try {
-//       const {data} = await axios.post(backendUrl + 'api/auth/send-reset-otp', {email})
-//       data.success ? toast.success(data.message) : toast.error(data.message)
-//       data.success && setIsEmailSent(true)
-//     } catch (error) {
-//       toast.error(error.message)
-//     }
-//   }
-// v
-//
+    fetchPayments();
+  }, [backendUrl]);
 
-  const onSubmitEmail = async (e) => {
-    e.preventDefault();
-    console.log("Submit email triggered");
-    console.log(backendUrl);
+  // Delete a payment
+  const handleDeletePayment = async (paymentId) => {
     try {
-      const { data } = await axios.post(backendUrl + '/api/auth/send-reset-otp', { email });
-      console.log(data); // Check the response from the backend
-      data.success ? toast.success(data.message) : toast.error(data.message);
-      data.success && setIsEmailSent(true);
-      console.log("EMAIL IS SENT")
+      const response = await fetch(
+        `${backendUrl}/api/payments/payments/${paymentId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        // Remove the deleted payment from the state
+        setPayments((prevPayments) =>
+          prevPayments.filter((payment) => payment._id !== paymentId)
+        );
+        alert("Payment deleted successfully!");
+      } else {
+        throw new Error("Failed to delete payment");
+      }
     } catch (error) {
-      console.log("EMAIL IS NOT SENT")
-      toast.error("Error sending OTP: " + error.message);
-      console.error("Error:", error);
+      console.error("Error deleting payment:", error);
+      alert("Failed to delete payment. Please try again.");
     }
   };
 
-  const onSubmitOTP = async (e)=>{
-    e.preventDefault()
-    const otpArray = inputRefs.current.map(e => e.value)
-    setOtp(otpArray.join(''))
-    setIsOtpSubmitted(true)
-    console.log(otpArray.join('')); // Log the OTP value
+  // Filter and sort payments
+  const filteredPayments = payments
+    .filter((payment) => {
+      // Filter by member name
+      const matchesSearchTerm = payment.member
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      // Filter by payment type
+      const matchesType =
+        filterType === "all" ||
+        payment.type.toLowerCase() === filterType.toLowerCase();
+
+      // Filter by month
+      const paymentMonth = new Date(payment.date).toLocaleString("default", {
+        month: "short",
+      });
+      const matchesMonth =
+        filterMonth === "all" ||
+        paymentMonth.toLowerCase() === filterMonth.toLowerCase();
+
+      return matchesSearchTerm && matchesType && matchesMonth;
+    })
+    .sort(
+      (a, b) =>
+        sortOrder === "desc"
+          ? new Date(b.date) - new Date(a.date) // Most recent first
+          : new Date(a.date) - new Date(b.date) // Oldest first
+    );
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentPayments = filteredPayments.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50 min-h-screen w-full flex flex-col items-center justify-center py-10">
+        <div className="w-full max-w-7xl px-10">
+          <div className="flex justify-center items-center">
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-maroon rounded-full animate-spin"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const onSubmitNewPassword = async (e)=> {
-    e.preventDefault();
-    try {
-      const {data} = await axios.post(backendUrl + '/api/auth/reset-password', 
-      {email, otp, newPassword})
-      data.success ? toast.success(data.message) : toast.error(data.message)
-      data.success && navigate('/login')
-    } catch (error) {
-      toast.error(error.message)
-    }
+  if (error) {
+    return (
+      <div className="bg-gray-50 min-h-screen w-full flex flex-col items-center justify-center py-10">
+        <div className="w-full max-w-7xl px-10">
+          <div className="text-center text-red-600 text-xl font-bold">
+            Error: {error}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className='flex items-center justify-center min-h-screen bg-gradient-to-br from white to bg-red-400'>
-      <img onClick={()=>navigate('/')} src={assets.logo} alt="" className="absolute left-5 sm:left-20 top-5 w-28 sm:w-32 cursor-pointer"/>
-
-      {/* enter email id */}
-
-      {!isEmailSent && 
-      <form onSubmit={onSubmitEmail} className='bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm'>
-      <h1 className='text-white text-2xl font-semibold text-center mb-4'>
-        Reset Password
-      </h1>
-      <p className='text-center mb-6 text-indigo-300'>
-        Enter your registered email address
-      </p>
-      <div className='mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333A5C]'>
-        <img src={assets.mail_icon} alt="" className='w-3 h-3' />
-        <input type='email' placeholder='Email Address' className='bg-transparent outline-none text-white'
-        value={email} onChange={e => setEmail(e.target.value)} required/>
-      </div>
-      <button className='w-full py-2.5 bg-gradient-to-r from-indigo-500 to bg-indigo-900 text-white rounded-full mt-3'>
-          Submit
-      </button>
-      </form> 
-      } 
-
-      {/* OTP input Form */}
-
-      {!isOtpSubmitted && isEmailSent && 
-      <form onSubmit={onSubmitOTP} className='bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm'>
-        <h1 className='text-white text-2xl font-semibold text-center mb-4'>
-          Reset Password OTP
+    <div className="bg-gray-50 min-h-screen w-full flex flex-col items-center py-10">
+      <div className="w-full max-w-7xl px-10">
+        <h1 className="text-5xl font-extrabold text-maroon text-center mb-6">
+          Payments
         </h1>
-        <p className='text-center mb-6 text-indigo-300'>
-          Enter the 6-digit code sent to your email address
-        </p>
-        <div className='flex justify-between mb-8' onPaste={handlePaste}>
-          {Array(6).fill(0).map((_, index)=>(
-            <input type='text' maxLength='1' key={index} required className='w-12 h-12 bg-[#333A5C] text-white text-center text-xl rounded-md'
-            ref={e => inputRefs.current[index]=e}
-            onInput={(e) => handleInput(e, index)}
-            onKeyDown={(e) => handleKeyDown(e, index)}/>
-          ))}
+        <div className="flex justify-between items-center mb-6 p-4 bg-white shadow-lg rounded-lg">
+          <StatCard
+            title="Total Payments"
+            value={filteredPayments.length}
+            icon={FaMoneyBillWave}
+            color="bg-blue-100 text-white"
+          />
+          <div className="flex gap-4">
+            <select
+              className="p-3 border rounded-lg shadow-sm text-lg bg-white focus:outline-none focus:ring-2 focus:ring-maroon"
+              onChange={(e) => setSortOrder(e.target.value)}
+              value={sortOrder}
+            >
+              <option value="desc">Most Recent</option>
+              <option value="asc">Oldest First</option>
+            </select>
+            <select
+              className="p-3 border rounded-lg shadow-sm text-lg bg-white focus:outline-none focus:ring-2 focus:ring-maroon"
+              onChange={(e) => setFilterType(e.target.value)}
+              value={filterType}
+            >
+              <option value="all">All Types</option>
+              <option value="annual">Annual</option>
+              <option value="monthly">Monthly</option>
+              <option value="walk-in">Walk-in</option>
+            </select>
+            <select
+              className="p-3 border rounded-lg shadow-sm text-lg bg-white focus:outline-none focus:ring-2 focus:ring-maroon"
+              onChange={(e) => setFilterMonth(e.target.value)}
+              value={filterMonth}
+            >
+              <option value="all">All Months</option>
+              <option value="Jan">January</option>
+              <option value="Feb">February</option>
+              <option value="Mar">March</option>
+              <option value="Apr">April</option>
+              <option value="May">May</option>
+              <option value="Jun">June</option>
+              <option value="Jul">July</option>
+              <option value="Aug">August</option>
+              <option value="Sep">September</option>
+              <option value="Oct">October</option>
+              <option value="Nov">November</option>
+              <option value="Dec">December</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Search by member name"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="p-3 w-72 border rounded-lg shadow-sm text-lg bg-white focus:outline-none focus:ring-2 focus:ring-maroon"
+            />
+          </div>
         </div>
-        <button className='w-full py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-900 text-white rounded full'>
-          Submit
-        </button>
-      </form>
-      }
-
-      {/*enter new password*/}
-      {isOtpSubmitted && isEmailSent && 
-      <form onSubmit = {onSubmitNewPassword} className='bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm'>
-      <h1 className='text-white text-2xl font-semibold text-center mb-4'>
-        New Password 
-      </h1>
-      <p className='text-center mb-6 text-indigo-300'>
-        Enter new password
-      </p>
-      <div className='mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333A5C]'>
-        <img src={assets.lock_icon} alt="" className='w-3 h-3' />
-        <input type='password' placeholder='Password' className='bg-transparent outline-none text-white'
-        value={newPassword} onChange={e => setNewPassword(e.target.value)} required/>
+        <div className="bg-white p-8 w-full rounded-xl shadow-lg">
+          <h2 className="text-2xl font-bold text-maroon text-center mb-6">
+            Recent Payments
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse rounded-lg shadow-md text-gray-700">
+              <thead>
+                <tr className="bg-maroon text-white">
+                  <th className="px-6 py-4 text-left">Date</th>
+                  <th className="px-6 py-4 text-left">Member</th>
+                  <th className="px-6 py-4 text-left">Amount (₱)</th>
+                  <th className="px-6 py-4 text-left">Payment Type</th>
+                  <th className="px-6 py-4 text-left">Expiry Date</th>
+                  <th className="px-6 py-4 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentPayments.map((payment, index) => (
+                  <tr
+                    key={index}
+                    className="border-b border-gray-200 hover:bg-gray-100 transition"
+                  >
+                    <td className="px-6 py-4 font-bold">{payment.date}</td>
+                    <td className="px-6 py-4">{payment.member}</td>
+                    <td className="px-6 py-4 font-semibold">
+                      ₱{payment.amount.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4">{payment.type}</td>
+                    <td className="px-6 py-4">{payment.expiry}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleDeletePayment(payment._id)}
+                        className="text-red-600 hover:text-red-800 transition"
+                      >
+                        <FaTrash className="text-xl" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Pagination Controls */}
+          <div className="flex justify-center items-center mt-6">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-maroon text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="mx-4 text-lg font-semibold">
+              Page {currentPage} of{" "}
+              {Math.ceil(filteredPayments.length / itemsPerPage)}
+            </span>
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={
+                currentPage ===
+                Math.ceil(filteredPayments.length / itemsPerPage)
+              }
+              className="px-4 py-2 bg-maroon text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
-      <button className='w-full py-2.5 bg-gradient-to-r from-indigo-500 to bg-indigo-900 text-white rounded-full mt-3'>
-          Submit
-      </button>
-      </form> 
-    }
-
     </div>
-  )
-}
+  );
+};
 
-export default ResetPassword
+const StatCard = ({ title, value, icon: Icon, color }) => (
+  <div className={`flex items-center p-4 rounded-lg shadow-md w-60 ${color}`}>
+    <Icon className="text-4xl mr-4 text-maroon" />
+    <div>
+      <p className="text-sm font-medium text-black">{title}</p>
+      <p className="text-xl font-bold text-black">{value}</p>
+    </div>
+  </div>
+);
+
+export default Payments;
